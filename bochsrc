@@ -1,0 +1,32 @@
+# how much memory the emulated machine will have
+megs: 20
+
+# filename of ROM images
+romimage: file=/Users/rosswen/code/bochs-2.7/bios/BIOS-bochs-latest
+vgaromimage: file=/Users/rosswen/code/bochs-2.7/bios/VGABIOS-lgpl-latest
+
+
+# what disk images will be used
+floppya: 1_44=fd.img, status=inserted
+
+# choose the boot disk.
+boot: floppy
+
+# where do we send log messages?
+# log: bochsout.txt
+
+# disable the mouse
+mouse: enabled=0
+
+# enable ata0
+#ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+
+# setup link
+#ata0-master: type=disk, path=hd1.img, mode=flat, cylinders=410, heads=16, spt=38, translation=none
+
+display_library: sdl #, options=gui_debug
+
+# use command in MacOS m1: x86_64-elf-gdb kernel, then input "target remote localhost:1234"
+#gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
+
+
