@@ -1,0 +1,11 @@
+bochs
+bochs_debugger
+bximage
+
+*.o
+*.log
+*.lst
+*.out
+*.img
+
+
