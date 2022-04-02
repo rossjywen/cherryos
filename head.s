@@ -8,13 +8,15 @@ global _start, idt, gdt
 section .text
 
 _start:
-	;db 0x22, 0x33, 0x45, 0xab, 0xcd
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
 	lgdt [gdtr_48]
 	jmp 0x0008:setup_idt
 	; step 1 is done
 
 setup_idt:
-	mov eax, 0x10
+	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
 	lidt [idtr_48]
@@ -28,7 +30,7 @@ do_setup_idt:
 	add ecx, 8
 	cmp ecx, 256*8
 	jnz do_setup_idt
-	;jz setup_pagging
+	jz setup_pagging
 	; step 2 is done
 
 setup_pagging:
@@ -52,7 +54,7 @@ idtr_48:
 				; 256 vectors
 	dd idt
 
-
+align 8
 gdtr_48:
 	dw 64*8+1	; limit
 				; support maxmium 64 tasks

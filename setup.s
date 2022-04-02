@@ -11,11 +11,13 @@ MASTER_8259_INIT_ICW1 equ 0x20
 MASTER_8259_INIT_ICW2 equ 0x21
 MASTER_8259_INIT_ICW3 equ 0x21
 MASTER_8259_INIT_ICW4 equ 0x21
+MASTER_8259_OPERATE_OCW1 equ 0x21
 
 SLAVE_8259_INIT_ICW1 equ 0xA0
 SLAVE_8259_INIT_ICW2 equ 0xA1
 SLAVE_8259_INIT_ICW3 equ 0xA1
 SLAVE_8259_INIT_ICW4 equ 0xA1
+SLAVE_8259_OPERATE_OCW1 equ 0xA1
 
 %define message0 "in setup module"
 %strlen message0_len message0
@@ -110,6 +112,8 @@ reprogram_8259:
 	mov al, 0x01					; set ICW4	1.x86 mode
 	out MASTER_8259_INIT_ICW4, al	;			2.normal EOI
 									;			3.normal fully nested mode
+	mov al, 0xFF
+	out MASTER_8259_OPERATE_OCW1, al; set mask reg as 0xFF to mask out all interrupts
 
 	mov al, 0x11					; same as master
 	out SLAVE_8259_INIT_ICW1, al
@@ -119,15 +123,17 @@ reprogram_8259:
 	out SLAVE_8259_INIT_ICW3, al	
 	mov al, 0x01					; same as master
 	out SLAVE_8259_INIT_ICW4, al
+	mov al, 0xFF
+	out SLAVE_8259_OPERATE_OCW1, al	; set mask reg as 0xFF to mask out all interrupts
 	; step 3 is done
 
 transfer_to_32bit:
-	;mov eax, cr0
-	;lidt [idtr_48]
-	;lgdt [gdtr_48]
-	;or eax, 0x1
-	;mov cr0, eax	
-	;jmp 0x0008:0	; jump to head.s
+	mov eax, cr0
+	lidt [idtr_48]
+	lgdt [gdtr_48]
+	or eax, 0x1
+	mov cr0, eax	
+	jmp 0x0008:0	; jump to head.s
 	; step 4 is done, now it is in 32bit mode
 	; step 5 is done
 
