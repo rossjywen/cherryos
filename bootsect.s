@@ -1,6 +1,6 @@
 ; step 1 move the bootsect.s code itself from 0x7c000-0x7c200 to 0x90000-0x90200
 ; step 2 load setup.s code which stores in subsequent 4 sectors from floppy disk to 0x90200-0x90a00
-; step 3 load the KERNEL code which stores in subsequent todo sectors to 0x10000-todo
+; step 3 load the KERNEL code which stores in subsequent 240 sectors to 0x10000-0x2E000 (length 120k)
 ; step 4 jump to setup.s code
 
 BOOT_SECT_SEG equ 0x7c0

@@ -4,10 +4,11 @@
 ; step 4 setup pagging table
 
 extern main
-global _start, idt, gdt
+global _start, page_dir, idt, gdt
 section .text
 
 _start:
+page_dir:
 	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
@@ -33,8 +34,49 @@ do_setup_idt:
 	jz setup_pagging
 	; step 2 is done
 
-setup_pagging:
+page_dir_padding:
+	times 0x1000-($-$$) db 0 	; 0x1000 is the size of page-table
+								; amount of entries in page-table is 2^10 = 1024 
+								; entry individual size is 4 bytes
+								; whole size -> 2^10 * 4 = 4096 = 0x1000
+								; the code below this point is going to be flushed to 0
+								; and first 4 entries are going to be four 4MB-pages for kernel
 
+; 1. test if 4MB page feature is valid
+; 2. initialize four 4MB-pages in [page_dir+0] [page_dir+4] [page_dir+8] [page_dir+12]
+; 3. jump to main()
+setup_pagging:
+	mov eax, 0x01	; invoke cpuid to acquire whether 4MB-page feature is valid
+	cpuid
+	and edx, 0x08	; edx->bit3 indicates the result
+	cmp edx, 0x08
+	jne dead_loop	; if PSE is not valid jump to dead loop
+
+	cld
+	mov ecx, 0x1000/4	; flush memory 0~0x1000 
+	mov edi, 0
+	mov eax, 0
+	rep stosd			; flush data done
+
+	mov eax, 0x00000087				; 1st 4MB-page
+	mov dword [page_dir+0], eax
+	mov eax, 0x00400087 			; 2nd 4MB-page
+	mov dword [page_dir+4], eax
+	mov eax, 0x00800087				; 3rd 4MB-page
+	mov dword [page_dir+8], eax
+	mov eax, 0x00C00087		 		; 4th 4MB-page
+	mov dword [page_dir+12], eax
+
+	mov eax, 0
+	mov cr3, eax			; guarantee CR0 has effective value before enable pagging
+
+	mov eax, cr4			; this is very significant
+	or eax, 0x10			; before using 4MB-page 
+	mov cr4, eax			; CR4.bit4 must be 1
+
+	mov eax, cr0
+	or eax, 0x80000000
+	mov cr0, eax			; enable pagging
 
 	push dead_loop	; this is the return address of main()
 	jmp main
