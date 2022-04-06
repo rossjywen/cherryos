@@ -20,7 +20,8 @@ setup_idt:
 	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
-	;lss xxx todo
+	mov ss, ax
+	mov esp, kernel_stack
 	lidt [idtr_48]
 
 	mov ecx, 0
@@ -42,6 +43,12 @@ page_dir_padding:
 								; whole size -> 2^10 * 4 = 4096 = 0x1000
 								; the code below this point is going to be flushed to 0
 								; and first 4 entries are going to be four 4MB-pages for kernel
+	
+	times 0x2000-($-$$) db 0	; when jump to C language a stack is necessary
+								; I experienced a tidious bug debugging because of lack of this
+								; thanks God I found this bug and fix it :)
+kernel_stack:					; this stack is used by kernel task
+								; length is 0x1000->4k absolutely enough
 
 ; 1. test if 4MB page feature is valid
 ; 2. initialize four 4MB-pages in [page_dir+0] [page_dir+4] [page_dir+8] [page_dir+12]
