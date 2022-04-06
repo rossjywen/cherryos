@@ -20,6 +20,7 @@ setup_idt:
 	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
+	;lss xxx todo
 	lidt [idtr_48]
 
 	mov ecx, 0
@@ -90,7 +91,6 @@ unknown_interrupt:
 	iret
 
 
-section .data
 idtr_48:
 	dw 256*8	; limit
 				; 256 vectors
