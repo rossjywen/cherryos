@@ -7,6 +7,9 @@
 #define KERNEL_DS	0x0010
 #define KERNEL_SS	0x0010
 
+#define DPL_0	0
+#define DPL_3	3
+
 
 #define enable_interrupt() asm("sti"::)
 #define disable_interrupt() asm("cli"::)

@@ -53,6 +53,7 @@ clean :
 
 
 kernel/traps.o : kernel/traps.c
+kernel/asm.o : kernel/asm.s
 	(cd kernel; make)
 
 
