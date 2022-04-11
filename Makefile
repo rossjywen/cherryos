@@ -12,7 +12,8 @@ LD		= x86_64-elf-ld
 OBJS	= head.o \
 		  main.o \
 		  kernel/traps.o \
-		  kernel/asm.o
+		  kernel/asm.o \
+		  driver/console.o
 
 KERNEL	= kernel_bin kernel_img bootsect_bin setup_bin
 
@@ -50,10 +51,14 @@ clean :
 	rm -f kernel_bin
 	rm -f kernel_img
 	(cd kernel; make clean)
+	(cd driver; make clean)
 
 
 kernel/traps.o : kernel/traps.c
 kernel/asm.o : kernel/asm.s
 	(cd kernel; make)
+
+driver/console.o : driver/console.c
+	(cd driver; make)
 
 

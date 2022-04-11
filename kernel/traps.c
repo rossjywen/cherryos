@@ -44,7 +44,7 @@ void do_nmi_2()
 
 void do_int3_3()
 {
-	print_info_and_exit();
+	// print some info and return
 }
 
 void do_overflow_4()
@@ -143,6 +143,8 @@ void trap_init(void)
 	set_gate(&idt, 14, TRAP_GATE, KERNEL_CS, &page_fault_14, DPL_0);
 	// 15 is reserved by Intel
 	set_gate(&idt, 16, TRAP_GATE, KERNEL_CS, &coprocessor_error_16, DPL_0);
+
+	// todo enable x87 with write OCW1 to 8259
 }
 
 

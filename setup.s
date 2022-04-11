@@ -54,8 +54,8 @@ start0:
 	mov [10], bl	; save graphic memory size to 0x9000A 
 					; 0x00 -> 64k
 					; 0x01 -> 128k
-					; 0x10 -> 192k
-					; 0x11 -> 256k
+					; 0x02 -> 192k
+					; 0x03 -> 256k
 	mov [11], bh	; save color setting to 0x9000B
 					; 0x00 -> color mode (3Dx address range)
 					; 0x01 -> monochrome mode (3Bx address range)
