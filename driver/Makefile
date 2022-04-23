@@ -4,7 +4,9 @@ CFLAGS	= -g -c -nostdinc -I../include -Wall -m32 -O0
 AS		= nasm
 ASFLAGS	= -g -f elf32 
 
-OBJS	= console.o 
+OBJS	= 	console.o \
+			keyboard.o \
+			tty_io.o
 
 
 %.o : %.s

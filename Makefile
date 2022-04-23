@@ -13,7 +13,9 @@ OBJS	= head.o \
 		  main.o \
 		  kernel/traps.o \
 		  kernel/asm.o \
-		  driver/console.o
+		  driver/console.o \
+		  driver/keyboard.o \
+		  driver/tty_io.o
 
 KERNEL	= kernel_bin kernel_img bootsect_bin setup_bin
 
@@ -59,6 +61,8 @@ kernel/asm.o : kernel/asm.s
 	(cd kernel; make)
 
 driver/console.o : driver/console.c
+driver/keyboard.o : driver/keyboard.s
+driver/tty_io.o : driver/tty_io.c
 	(cd driver; make)
 
 

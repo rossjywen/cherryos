@@ -28,9 +28,18 @@ bits 16
 
 	jmp SETUP_SEG:$start0
 start0:
+	mov ax, cs
+	mov ds, ax
+	mov es, ax
+	mov sp, 0xFF
+	
+	mov cx, message0_len+2
+	mov bp, mes0
+	call print_mes
+
 	mov ax, DATA_TABLE_SEG
 	mov ds, ax
-	
+	mov es, ax
 	; start detector the harware parameters
 
 	mov ah, 0x03
@@ -71,10 +80,6 @@ start0:
 	rep movsb
 	; step 1 is done
 
-	mov cx, message0_len+2
-	mov bp, mes0
-	call print_mes
-	call print_mes
 
 start_move_kernel:
 	cli			; disable interrupt
@@ -150,9 +155,9 @@ print_mes:
 	push bx
 	push cx
 
-	mov ax, cs
-	mov ds, ax
-	mov es, ax
+	;mov ax, cs
+	;mov ds, ax
+	;mov es, ax
 
 	mov ah, 3
 	mov bh, 0
@@ -160,17 +165,17 @@ print_mes:
 
 	pop cx
 	
-	mov bx, 0x000c
+	mov bx, 0x000C
 	mov ax, 0x1301
-
 	int 0x10
+
 	pop bx
 	pop ax
 
 	ret
 
 mes0:
-	db message0, 0x0d, 0x0a, 0x00
+	db message0, 0x0D, 0x0A
 
 
 

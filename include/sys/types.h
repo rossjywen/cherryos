@@ -1,6 +1,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define false	0
+#define true	1
 
 typedef long long int64_t;
 typedef unsigned long long uint64_t;

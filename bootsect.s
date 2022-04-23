@@ -121,7 +121,7 @@ load_kernel:
 
 
 transfer_to_setup:
-	mov cx, dbg_mes_len2
+	mov cx, dbg_mes_len2+2
 	mov bp, mes2
 	call print_mes
 	jmp SETUP_SEG:0
@@ -172,10 +172,10 @@ curr_loop:
 
 mes1:
 	db dbg_mes1
-	db 0x0D, 0x0A, 0x00
+	db 0x0D, 0x0A
 mes2:
 	db dbg_mes2
-	db 0x0D, 0x0A, 0x00
+	db 0x0D, 0x0A
 
 
 	times 510-($-$$) db 0 
