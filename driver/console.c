@@ -50,8 +50,8 @@ static uint16_t video_val_port;
 
 static uint8_t video_type;
 
-
-static uint32_t state = 0;
+enum console_parse_state {NORMAL=0, ESI, CSI_1, CSI_2, CSI_3};
+static enum console_parse_state state = NORMAL;
 
 #define BLANK	0x0720
 
@@ -63,8 +63,8 @@ static uint32_t scroll_end_mem;			// 当前屏幕截止显存地址 (scroll_orig
 static uint32_t cur_pos_mem;		// 光标所在地址 (scroll_origin_mem+ pos_x pos_y偏移的地址)
 static uint8_t cur_pos_x;			// 光标坐标 x y
 static uint8_t cur_pos_y;			// (注意 坐标的单位是屏幕显示的字符 一个字符是两个字节)
-//static uint8_t cur_pos_y_top;		// 光标坐标y的最小值 如果小于这个值就需要 scroll_down()
-//static uint8_t cur_pos_y_bottom;	// 光标坐标y的最大值 如果大于这个值就需要 scroll_up()
+static uint8_t saved_cur_pos_x;
+static uint8_t saved_cur_pos_y;
 
 
 static void update_cursor(void)
@@ -168,10 +168,33 @@ static void scroll_up(void)
 }
 
 
+static void scroll_down(void)
+{
+/*
+	这个函数我有点不懂为什么要这么做
+	这个函数不改变scroll_origin_mem所以并不会真的滚屏
+	只是把行都向下移动一行 最后一行就被覆盖了 同时定行补充为BLANK
+*/
+	int32_t i;
+
+	// 从最后一行最后一个字符开始复制成前一行相同位置的字符 直到第一行
+	for(i = display_char_per_line * (display_line_nr - 1) - 1; i != -1; i--)
+	{
+		*((uint16_t*)(scroll_origin_mem) + display_char_per_line + i) = *((uint16_t*)(scroll_origin_mem) + i);
+	}
+
+	// 把第一行的所有字符填充成BLANK
+	for(i = 0; i < display_char_per_line; i++)
+	{
+		*((uint16_t*)(scroll_origin_mem) + i) = BLANK;
+	}
+}
+
+
 static void cr(void)
 {
 /*
-	回车符 移动到行的最左边
+	回车符 光标移动到行的最左边
 	这也是为什么要把回车变成换行+回车的原因
 	单独一个回车是没有意义的
 */
@@ -180,11 +203,14 @@ static void cr(void)
 	cur_pos_x = 0;
 }
 
-// 换行符
-// 这个函数只更新cur_pos_y以及对cur_pos_mem的影响
-// 所以cur_pos_x的更新以及对cur_pos_mem的影响需要程序外额外计算
+
 static void lf(void)
 {
+/* 
+	换行符 光标移动到下一行
+ 	这个函数只更新cur_pos_y以及对cur_pos_mem的影响
+ 	所以cur_pos_x的更新以及对cur_pos_mem的影响需要程序外额外计算
+*/
 	if(cur_pos_y + 1 <= display_line_nr)
 	{
 		cur_pos_y += 1;
@@ -195,6 +221,26 @@ static void lf(void)
 		scroll_up();
 	}
 }
+
+
+static void ri(void)
+{
+/*
+	换行符相反的意思 光标移动到上一行
+ 	这个函数只更新cur_pos_y以及对cur_pos_mem的影响
+ 	所以cur_pos_x的更新以及对cur_pos_mem的影响需要程序外额外计算
+*/
+	if(cur_pos_y > 0)
+	{
+		cur_pos_y--;
+		cur_pos_mem -= size_per_line;
+	}
+	else
+	{
+		scroll_down();
+	}
+}
+
 
 // 删除符
 static void del(void)
@@ -272,7 +318,7 @@ void console_write(char* string, uint32_t nr)
 		switch(state)
 		{
 			// 处理正常字符
-			case 0:
+			case NORMAL:
 				if(c > 0x1F && c < 0x7F)	// this means the displayable ASCII character
 				{
 					// detect whether at boundary of a line
@@ -339,15 +385,54 @@ void console_write(char* string, uint32_t nr)
 				}
 
 				break;
-			// 处理
-			case 1:
+
+			// 处理ESC(0x1B)开头的转义序列
+			case ESI:
+				state = NORMAL;
+
+				if(c == '[')		// ESC(0x1B) + [ (0x5B) = CSI(0x9B)
+					state = CSI_1;
+				else if(c == 'E')	// ESC(0x1B) + E(0x45) = NEL(0x85)
+				{
+					// move cursor to next line and start of line
+					cur_goto_pos(0, cur_pos_y + 1);
+				}
+				else if(c == 'D')	// ESC(0x1B) + D(0x44) = IND(0x84)
+				{
+					// mvoe cursor to next line
+					lf();
+				}
+				else if(c == 'M')	// ESC(0x1B) + M(0x4D) = RI(0x8D)
+				{
+					// move cursor to last line
+					ri();
+				}
+				else if(c == 'Z')	// ESC(0x1B) + Z(0x5A)
+				{
+					// todo
+					//respond(tty);
+				}
+				else if(c == '7')	// ESC(0x1B) + 7(0x37)
+				{
+					// save cursor position
+					saved_cur_pos_x = cur_pos_x;
+					saved_cur_pos_y = cur_pos_y;
+				}
+				else if(c == '8')	// ESC(0x1B) + 0x38
+				{
+					// restore cursor position
+					cur_goto_pos(saved_cur_pos_x, saved_cur_pos_y);
+				}
+
 				break;
-			// 处理
-			case 2:
+
+			// 处理CSI(0x9B)开头的控制序列 
+			// 因为没有支持8bit的ASCII 所以这里的CSI用转义序列表示为 ESC(0x1B) + [ (0x5B)
+			case CSI_1:
 				break;
-			case 3:
+			case CSI_2:
 				break;
-			case 4:
+			case CSI_3:
 				break;
 			default:
 				break;
