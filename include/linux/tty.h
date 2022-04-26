@@ -27,9 +27,9 @@
 
 struct tty_queue
 {
-	uint32_t data;	// 换行符的数量
-	ptr_t head;		// every write increases head
-	ptr_t tail;		// every read decreases tail
+	uint32_t data;		// 换行符的数量
+	uint32_t head;		// every write increases head
+	uint32_t tail;		// every read decreases tail
 
 	// task_struct * wait_q;	todo
 	char buf[TTY_BUF_SIZE];
@@ -41,8 +41,8 @@ struct tty_struct
 {
 	struct termios termios;		
 
-	//uint32_t pgrp;
-	int stopped;
+	uint32_t pgrp;
+	uint32_t stopped;
 
 	void (*write)(struct tty_struct *tty);
 

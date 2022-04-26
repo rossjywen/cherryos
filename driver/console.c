@@ -295,24 +295,23 @@ void console_init(void)
 }
 
 
-//void console_write(struct tty_struct *tty)
-void console_write(char* string, uint32_t nr)
+void console_write(struct tty_struct *tty)
 {
-	//uint32_t nr;
+	uint32_t nr;
 	char c;
 	uint32_t i = 0;
 	uint16_t wr_c = 0x0700;
 	uint8_t ht_offset;
 
-	//nr = READ_SPACE(tty->write_q);
+	nr = READ_SPACE(tty->write_q);
 
 	while(nr != 0)
 	{
 		nr--;
 
-		//c = tty->write_q.buf[tty->write_q.tail];	// read a charactor from write_q
-		//INC(tty->write_q.tail);
-		c = string[i];
+		c = tty->write_q.buf[tty->write_q.tail];	// read a charactor from write_q
+		INC(tty->write_q.tail);
+		//c = string[i];
 		i++;
 
 		switch(state)
@@ -348,10 +347,10 @@ void console_write(char* string, uint32_t nr)
 				{
 					cr();
 				}
-				//else if(c == tty->termios.c_cc[V_ERASE])	// 删除符
-				//{
-				//	del();
-				//}
+				else if(c == tty->termios.c_cc[V_ERASE])	// 删除符
+				{
+					del();
+				}
 				else if(c == 0x8)	// 0x08 backspace
 				{
 					// backspace的效果就是光标往左移动一个
