@@ -15,7 +15,8 @@ OBJS	= head.o \
 		  kernel/asm.o \
 		  driver/console.o \
 		  driver/keyboard.o \
-		  driver/tty_io.o
+		  driver/tty_io.o \
+		  lib/ctype.o
 
 KERNEL	= kernel_bin kernel_img bootsect_bin setup_bin
 
@@ -54,6 +55,7 @@ clean :
 	rm -f kernel_img
 	(cd kernel; make clean)
 	(cd driver; make clean)
+	(cd lib; make clean)
 
 
 kernel/traps.o : kernel/traps.c
@@ -64,5 +66,8 @@ driver/console.o : driver/console.c
 driver/keyboard.o : driver/keyboard.s
 driver/tty_io.o : driver/tty_io.c
 	(cd driver; make)
+
+lib/ctype.o : lib/ctype.c include/ctype.h
+	(cd lib; make)
 
 

@@ -2,7 +2,7 @@
 
 void trap_init(void);
 void console_init(void);
-uint32_t kernel_tty_write(uint32_t channel, char *buf, uint32_t nr);
+uint32_t kernel_tty_write(char *buf, uint32_t nr);
 
 int main()
 {
@@ -17,9 +17,10 @@ int main()
 	//console_write(p, 12);
 	
 	//console_write(pp, sizeof(pp));
-	kernel_tty_write(0, pp, sizeof(pp));
+	
+	kernel_tty_write(pp, sizeof(pp));
 
-	kernel_tty_write(0, p, 10);
+	kernel_tty_write(p, 10);
 }
 
 

@@ -1,5 +1,6 @@
 #include <linux/tty.h>
 #include <sys/types.h>
+#include <ctype.h>
 
 #define ASC_CR	0xC		// 回车符
 #define ASC_NL	0xA		// 换行符
@@ -10,7 +11,25 @@
 
 void console_write(struct tty_struct *tty);
 
+struct tty_struct kernel_tty = 
+{
+		{
+			I_CRNL,		// c_iflag
+			O_NLCR | O_POST, // c_oflag
+			0, // c_clfag
+			L_ISIG | L_ICANON | L_ECHO | L_ECHOCTL | L_ECHOKE,	// c_lflag
+			0, // c_line
+			{0x03, 0x1C, 0x7F, 0x15, 0x04, 0x00, 0x01, 0x00, 0x11, \
+			 0x13, 0x1A, 0x00, 0x12, 0x0F, 0x17, 0x16, 0x00}// c_cc[NCCS]
 
+		},// struct termios termios
+		0,				// uint32_t pgrp
+		0,				// uint32_t stopped
+		console_write,	// write 函数指针
+		{0,0,0,{}},				// struct tty_queue read_q
+		{0,0,0,{}},				// struct tty_queue write_q
+		{0,0,0,{}}				// struct tty_queue secondary
+};
  
 struct tty_struct tty_table[] = 
 {
@@ -23,7 +42,7 @@ struct tty_struct tty_table[] =
 			0, // c_line
 			{0x03, 0x1C, 0x7F, 0x15, 0x04, 0x00, 0x01, 0x00, 0x11, \
 			 0x13, 0x1A, 0x00, 0x12, 0x0F, 0x17, 0x16, 0x00}// c_cc[NCCS]
-			
+
 		},// struct termios termios
 		0,				// uint32_t pgrp
 		0,				// uint32_t stopped
@@ -67,7 +86,7 @@ void copy_to_cooked(struct tty_struct *tty)
 
 		if(tty->termios.c_iflag & I_UCLC)
 		{
-			;	// todo convert upper case letters to lower case letters
+			c = tolower(c);
 		}
 
 		// 规范模式 字符经过处理后给到secondary
@@ -220,11 +239,10 @@ void copy_to_cooked(struct tty_struct *tty)
 }
 
 
-uint32_t kernel_tty_write(uint32_t channel, char *buf, uint32_t nr)
+uint32_t kernel_tty_write(char *buf, uint32_t nr)
 {
 	char *p = buf;
 	char c;
-	struct tty_struct *tty = tty_table + channel;
 
 	if(nr >= TTY_BUF_SIZE)
 		return 0;
@@ -233,33 +251,32 @@ uint32_t kernel_tty_write(uint32_t channel, char *buf, uint32_t nr)
 	{
 		c = *p;
 
-		if(tty->termios.c_oflag & O_POST)
+		if(kernel_tty.termios.c_oflag & O_POST)
 		{
-			if(c == '\r' && tty->termios.c_oflag & O_CRNL)	// 把回车变成换行
+			if(c == '\r' && kernel_tty.termios.c_oflag & O_CRNL)	// 把回车变成换行
 				c = '\n';
-			else if(c == '\n' && tty->termios.c_oflag & O_NLRET)	// 把换行变成回车
+			else if(c == '\n' && kernel_tty.termios.c_oflag & O_NLRET)	// 把换行变成回车
 				c = '\r';
 
 
-			if(c == '\n' && tty->termios.c_oflag & O_NLCR)
+			if(c == '\n' && kernel_tty.termios.c_oflag & O_NLCR)
 			{
-				tty->write_q.buf[tty->write_q.head] = ASC_CR;
-				INC(tty->write_q.head);
+				kernel_tty.write_q.buf[kernel_tty.write_q.head] = ASC_CR;
+				INC(kernel_tty.write_q.head);
 			}
 	
-			// todo toupper
-			//if(tty->termios.c_oflag & O_LCUC)
-				//c = toupper(c);
+			if(kernel_tty.termios.c_oflag & O_LCUC)
+				c = toupper(c);
 		}
 
 		p++;
 		nr--;
 
-		tty->write_q.buf[tty->write_q.head] = c;
-		INC(tty->write_q.head);
+		kernel_tty.write_q.buf[kernel_tty.write_q.head] = c;
+		INC(kernel_tty.write_q.head);
 	}
 
-	tty->write(tty);
+	kernel_tty.write(&kernel_tty);
 
 	return nr;
 }

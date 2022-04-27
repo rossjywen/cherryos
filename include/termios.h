@@ -15,8 +15,9 @@
 
 // oflag
 #define O_POST		0x001	// 执行输出处理 这个flag置位下面的flag才生效 所以这个位一定置位
-#define O_CRNL		0x010	// 把回车变成换行
-#define O_NLRET		0x040	// 把换行变成回车
+#define O_LCUC		0x002	// 把小写字母转换成大写字母然后输出
+#define O_CRNL		0x010	// 把回车转换成换行
+#define O_NLRET		0x040	// 把换行转换成回车
 #define O_NLCR		0x004	// tty对外输出的时候(也就是外部读取tty内容的时候)
 							// 把换行符实际实现为 换行 + 回车 的效果
 							// 这个标志位配合 I_CRNL就把 回车符 和 换行符 都实现为 换行 + 回车 的效果
