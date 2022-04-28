@@ -13,10 +13,13 @@ OBJS	= head.o \
 		  main.o \
 		  kernel/traps.o \
 		  kernel/asm.o \
+		  kernel/vsprintf.o \
+		  kernel/printk.o \
 		  driver/console.o \
 		  driver/keyboard.o \
 		  driver/tty_io.o \
-		  lib/ctype.o
+		  lib/ctype.o \
+		  lib/string.o
 
 KERNEL	= kernel_bin kernel_img bootsect_bin setup_bin
 

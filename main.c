@@ -1,26 +1,38 @@
 #include <sys/types.h>
 
 void trap_init(void);
-void console_init(void);
-uint32_t kernel_tty_write(char *buf, uint32_t nr);
+
+void tty_init(void);
+
+uint32_t printk(const char *fmt, ...);
+
+
+/* _start, main, idt, gdt, idt_desc, gdt_desc, _pg_dir, after_page_table from head.s
+ * pg_dir is from C
+ * end is from linker
+ * */
+extern int _start;
+int main();
+
+void assemble_label_show()
+{
+	printk("from head.s\n");
+
+	printk("&_start 0x%X\n", &_start);
+	printk("_start 0x%X\n", _start);
+
+	printk("&main 0x%X\n", &main);
+	printk("main 0x%X\n", main);
+}
+
 
 int main()
 {
-	char *p = "hello Ross";
-
-	char pp[] = {0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D,0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D, 0x1B, 0x4D};
-
 	trap_init();
 
-	console_init();
+	tty_init();
 
-	//console_write(p, 12);
-	
-	//console_write(pp, sizeof(pp));
-	
-	kernel_tty_write(pp, sizeof(pp));
-
-	kernel_tty_write(p, 10);
+	assemble_label_show();
 }
 
 

@@ -4,7 +4,8 @@ CFLAGS	= -g -c -nostdinc -I../include -Wall -m32 -O0
 AS		= nasm
 ASFLAGS	= -g -f elf32 
 
-OBJS	= 	ctype.o
+OBJS	= 	ctype.o \
+			string.o
 
 
 %.o : %.s

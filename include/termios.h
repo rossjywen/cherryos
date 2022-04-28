@@ -31,22 +31,23 @@
 #define L_ECHOKE	0x4000	// 若设置了回显 被删除的字符也会在屏幕上被删除
 
 // control character index in c_cc[NCCS]
-//#define 
-//#define
-#define V_ERASE		2	// 擦出一个字符 (包括非显示字符)
+#define V_INTR		0	// 向进程发出中断信号
+#define V_QUIT		1	// 向进程发出退出信号
+#define V_ERASE		2	// 擦除一个字符 (包括非显示字符)
 #define V_KILL		3	// 删除整行字符
 #define	V_EOF		4	// end of file
-//#define
-//#define
-//#define
-#define V_START		8
-#define V_STOP		9
-//#define
-//#define
-//#define
-//#define
-//#define
-//#define
+#define V_TIME		5	// 非规范模式使用的超时 (未实现这个功能)
+#define V_MIN		6	// 非规范模式使用的最小输入格式 (未实现这个功能)
+#define V_SWTC		7	// 交换字符 未实现这个功能
+#define V_START		8	// 终端开始工作
+#define V_STOP		9	// 终端终止工作
+//#define V_SUSP	10	// 向进程发出挂起信号
+//#define V_EOL		11	// 行结束字符
+//#define V_REPRINT	12	// 重显示字符
+//#define V_DISCARD	13
+//#define V_WERASE	14
+//#define V_LNEXT	15
+//#define V_EOL2	16
 
 
 

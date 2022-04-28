@@ -5,7 +5,9 @@ AS		= nasm
 ASFLAGS	= -g -f elf32 
 
 OBJS	= asm.o \
-		  traps.o
+		  traps.o \
+		  vsprintf.o \
+		  printk.o 
 
 
 %.o : %.s

@@ -2,14 +2,15 @@
 #include <sys/types.h>
 #include <ctype.h>
 
-#define ASC_CR	0xC		// 回车符
-#define ASC_NL	0xA		// 换行符
+#define ASC_CR	0x0D	// 回车符
+#define ASC_NL	0x0A	// 换行符
 
 #define ASC_DEL	0x1F	// 删除
 
-//void console_write(char* string, uint32_t nr);
 
+void console_init(void);
 void console_write(struct tty_struct *tty);
+
 
 struct tty_struct kernel_tty = 
 {
@@ -52,6 +53,14 @@ struct tty_struct tty_table[] =
 		{0,0,0,{}}				// struct tty_queue secondary
 	},
 };
+
+
+
+void tty_init(void)
+{
+	console_init();
+	//rs_init();
+}
 
 
 

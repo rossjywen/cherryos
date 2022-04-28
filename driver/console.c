@@ -120,14 +120,16 @@ static void update_scroll(void)
 
 static void scroll_up(void)
 {
-/* 	imagin like using a phone to scroll up with finger
-	if scroll up means will show the content downward
+/* 	
+	imagin like using a phone to scroll up with finger, if scroll up means will show the content downward
 
 	1. update scroll_origin_mem scroll_end_mem
 	2. pad the new line with blank 0x0720
 	3. update cur_pos_mem
 */
 
+// 注意 scroll不会造成光标坐标x y变化 只会造成cur_pos_mem变化
+	
 	uint32_t i;
 
 	// need to move whole screen data to video_start_mem
@@ -148,7 +150,7 @@ static void scroll_up(void)
 			*((uint16_t*)(scroll_end_mem - size_per_line) + i) = BLANK;
 		}
 
-		cur_pos_mem = scroll_origin_mem + cur_pos_y * size_per_line + cur_pos_x * 2; // scroll不会造成x y变化 只会造成cur_pos_mem变化
+		cur_pos_mem = scroll_origin_mem + cur_pos_y * size_per_line + cur_pos_x * 2; 
 	}
 	// do not need to move data
 	else
@@ -211,7 +213,7 @@ static void lf(void)
  	这个函数只更新cur_pos_y以及对cur_pos_mem的影响
  	所以cur_pos_x的更新以及对cur_pos_mem的影响需要程序外额外计算
 */
-	if(cur_pos_y + 1 <= display_line_nr)
+	if(cur_pos_y + 1 <= display_line_nr - 1)
 	{
 		cur_pos_y += 1;
 		cur_pos_mem += size_per_line;
@@ -311,7 +313,6 @@ void console_write(struct tty_struct *tty)
 
 		c = tty->write_q.buf[tty->write_q.tail];	// read a charactor from write_q
 		INC(tty->write_q.tail);
-		//c = string[i];
 		i++;
 
 		switch(state)
