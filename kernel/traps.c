@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <asm/system.h>
+#include <linux/head.h>
 
 
 extern void divide_error_0(void);
@@ -18,8 +19,6 @@ extern void general_protection_13(void);
 extern void page_fault_14(void);
 extern void coprocessor_error_16(void);
 
-extern uint64_t idt;
-extern uint64_t gdt;
 
 void print_info_and_exit() 
 {
@@ -103,22 +102,23 @@ void do_coprocessor_error_16()
 }
 
 
-void set_gate(uint64_t *idt_table, uint8_t index, enum GATE_TYPE type, uint16_t code_seg_sel, void (*handler_addr)(void), uint8_t dpl)
+void set_gate(struct seg_desc *idt_table, uint8_t index, enum GATE_TYPE type, uint16_t code_seg_sel, void (*handler_addr)(void), uint8_t dpl)
 {
-	volatile uint64_t tmp;
-	uint32_t *p;
-	p = (uint32_t*)(&tmp);
+	uint32_t low = 0;
+	uint32_t high = 0;
 
-	
-	*p = code_seg_sel << 16 /* Segment Selector */| \
+
+	low = code_seg_sel << 16 /* Segment Selector */| \
 				((uint32_t)handler_addr & 0x0000FFFF) /* Offset[15:0] */;
 	
-	*(p + 1) = ((uint32_t)handler_addr & 0xFFFF0000) /* Offset[31:16] */ \
+	high = ((uint32_t)handler_addr & 0xFFFF0000) /* Offset[31:16] */ \
 				| (1 << 15) /* P=1 */ \
 				| (dpl << 13) /* DPL */ \
 				| (((uint8_t)type) << 8) /* bit11-bit8 int:0b1110 trap:0b1111 others are all 0 */;
 
-	idt_table[index] = tmp;
+	idt_table[index].low_32 = low;
+	idt_table[index].high_32 = high;
+
 }
 
 

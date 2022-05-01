@@ -15,6 +15,7 @@ OBJS	= head.o \
 		  kernel/asm.o \
 		  kernel/vsprintf.o \
 		  kernel/printk.o \
+		  kernel/sched.o \
 		  driver/console.o \
 		  driver/keyboard.o \
 		  driver/tty_io.o \

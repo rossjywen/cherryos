@@ -9,4 +9,7 @@ bximage
 *.img
 *.swp
 
+.cproject
+.project
+.settings/
 

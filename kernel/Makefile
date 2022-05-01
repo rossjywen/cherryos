@@ -7,7 +7,8 @@ ASFLAGS	= -g -f elf32
 OBJS	= asm.o \
 		  traps.o \
 		  vsprintf.o \
-		  printk.o 
+		  printk.o \
+		  sched.o
 
 
 %.o : %.s

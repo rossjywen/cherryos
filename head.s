@@ -4,7 +4,7 @@
 ; step 4 setup pagging table
 
 extern main
-global _start, page_dir, idt, gdt
+global _start, page_dir, idt, gdt, kernel_stack
 section .text
 
 _start:
