@@ -279,6 +279,6 @@ timer_interrupt:
 	mov eax, do_timer_interrupt
 	jmp no_error_code
 
-
+	iret
 
 

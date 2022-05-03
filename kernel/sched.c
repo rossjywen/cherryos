@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <linux/sched.h>
 #include <linux/head.h>
+#include <linux/kernel.h>
 #include <asm/system.h>
 #include <asm/io.h>
 
@@ -8,8 +9,6 @@
 
 #define NUM_INT_PS	100
 
-
-uint32_t printk(const char *fmt, ...);
 
 void test_task0(void);
 
@@ -47,7 +46,7 @@ union task_union task0 = {
 			
 			.eip =  (uint32_t)test_task0,		// 我打算给指向一个函数
 
-			.eflags = 0x00000206,	// 这是根据手册中eflag的初值设定的
+			.eflags = 0x00003202,	// 这是根据手册中eflag的初值设定的
 
 			.eax = 0,		// 所有通用寄存器初始化为0
 			.ecx = 0,
@@ -187,7 +186,7 @@ void sched_init(void)
 	out_b(((1193180 / NUM_INT_PS) >> 8) & 0xFF, CR_PORT_8254);	// 再写高位
 
 	// program 8259 to enable timer0 interrupt
-	set_gate(&idt, 0x20, TRAP_GATE, KERNEL_CS, &timer_interrupt, DPL_0);
+	set_gate(&idt, 0x20, INTERRUPT_GATE, KERNEL_CS, &timer_interrupt, DPL_0);
 	out_b(in_b(MASTER_8259_OPERATE_OCW1) & ~0x01, MASTER_8259_OPERATE_OCW1);
 }
 
@@ -283,12 +282,16 @@ void switch_to(uint32_t task_number)
 
 void test_task0(void)
 {
-	printk("in test_task0\n");
-	printk("in test_task0\n");
+	uint32_t i = 0;
 
 	while(1)
 	{
-		;
+		i++;
+		if(i == 50000000)
+		{
+			printk("in test_task0\n");
+			i = 0;
+		}
 	}
 }
 
@@ -299,7 +302,7 @@ void do_timer_interrupt()
 {
 	do_timer_i++;
 
-	if(do_timer_i == 500)
+	if(do_timer_i == 700)
 	{
 		tim++;
 		printk("in do_timer_interrupt() %d\n", tim);

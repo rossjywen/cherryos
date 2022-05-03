@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <asm/system.h>
 #include <linux/head.h>
+#include <linux/kernel.h>
 
 
 extern void divide_error_0(void);
@@ -22,82 +23,98 @@ extern void coprocessor_error_16(void);
 
 void print_info_and_exit() 
 {
+	//while(1) ;
 	// exit(11);
 }
 
 
 void do_divide_error_0()
 {
+	printk("divide error\n");
 	print_info_and_exit();	
 }
 
 void do_debug_1()
 {
+	printk("debug exception\n");
 	print_info_and_exit();
 }
 
 void do_nmi_2()
 {
+	printk("nmi interrupt\n");
 	print_info_and_exit();
 }
 
 void do_int3_3()
 {
 	// print some info and return
+	printk("int3 exception\n");
 }
 
 void do_overflow_4()
 {
+	printk("overflow exception\n");
 	print_info_and_exit();
 }
 
 void do_bounds_5()
 {
+	printk("bounds exception\n");
 	print_info_and_exit();
 }
 
 void do_invalid_op_6()
 {
+	printk("invalid op exception\n");
 	print_info_and_exit();
 }
 
 void do_device_not_available_7()
 {
+	printk("devicr not available exception\n");
 	print_info_and_exit();
 }
 
 void do_double_fault_8()
 {
+	printk("double fault\n");
 	print_info_and_exit();
 }
 
 void do_invalid_TSS_10()
 {
+	printk("invalid TSS error\n");
 	print_info_and_exit();
 }
 
 void do_segment_not_present_11()
 {
+	printk("segment not present exception\n");
 	print_info_and_exit();
 }
 
 void do_stack_segment_error_12()
 {
+	printk("stack segment error\n");
 	print_info_and_exit();
 }
 
 void do_general_protection_13()
 {
+	printk("general protection\n");
 	print_info_and_exit();
 }
 
 void do_page_fault_14()
 {
+	printk("page fault\n");
 	print_info_and_exit();
 }
 
 void do_coprocessor_error_16()
 {
+	printk("coprocessor error\n");
 	print_info_and_exit();
 }
 
@@ -116,9 +133,11 @@ void set_gate(struct seg_desc *idt_table, uint8_t index, enum GATE_TYPE type, ui
 				| (dpl << 13) /* DPL */ \
 				| (((uint8_t)type) << 8) /* bit11-bit8 int:0b1110 trap:0b1111 others are all 0 */;
 
+	//printk("set_gate() low %#x\n", low);
+	//printk("set_gate() high %#x\n", high);
+
 	idt_table[index].low_32 = low;
 	idt_table[index].high_32 = high;
-
 }
 
 

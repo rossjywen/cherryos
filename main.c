@@ -1,12 +1,12 @@
 #include <sys/types.h>
-#include <string.h>
+#include <asm/system.h>
 #include <linux/sched.h>
 #include <linux/head.h>
-#include <asm/system.h>
+#include <linux/kernel.h>
+#include <string.h>
 
 void trap_init(void);
 void tty_init(void);
-uint32_t printk(const char *fmt, ...);
 void sched_init(void);
 
 
