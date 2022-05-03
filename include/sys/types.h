@@ -4,6 +4,8 @@
 #define false	0
 #define true	1
 
+#define NULL ((void *) 0)
+
 typedef long long int64_t;
 typedef unsigned long long uint64_t;
 

@@ -1,9 +1,9 @@
 ; 1. all exception/interrupt entry routine
 ; 2. 
 
-extern do_divide_error_0, do_debug_1, do_nmi_2, do_int3_3, do_overflow_4, do_bounds_5, do_invalid_op_6, do_device_not_available_7, do_double_fault_8, do_invalid_TSS_10, do_segment_not_present_11, do_stack_segment_error_12, do_general_protection_13, do_page_fault_14, do_coprocessor_error_16
+extern do_divide_error_0, do_debug_1, do_nmi_2, do_int3_3, do_overflow_4, do_bounds_5, do_invalid_op_6, do_device_not_available_7, do_double_fault_8, do_invalid_TSS_10, do_segment_not_present_11, do_stack_segment_error_12, do_general_protection_13, do_page_fault_14, do_coprocessor_error_16, do_timer_interrupt
 
-global divide_error_0, debug_1, nmi_2, int3_3, overflow_4, bounds_5, invalid_op_6, device_not_available_7, double_fault_8, invalid_TSS_10, segment_not_present_11, stack_segment_error_12, general_protection_13, page_fault_14, coprocessor_error_16
+global divide_error_0, debug_1, nmi_2, int3_3, overflow_4, bounds_5, invalid_op_6, device_not_available_7, double_fault_8, invalid_TSS_10, segment_not_present_11, stack_segment_error_12, general_protection_13, page_fault_14, coprocessor_error_16, timer_interrupt
 
 section .text
 
@@ -270,6 +270,14 @@ error_code:
 	iret
 
 
+timer_interrupt:
+	push eax
+
+	mov al, 0x20
+	out 0x20, al
+
+	mov eax, do_timer_interrupt
+	jmp no_error_code
 
 
 

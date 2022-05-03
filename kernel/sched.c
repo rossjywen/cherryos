@@ -1,6 +1,12 @@
-#include <linux/sched.h>
 #include <sys/types.h>
+#include <linux/sched.h>
 #include <linux/head.h>
+#include <asm/system.h>
+#include <asm/io.h>
+
+
+
+#define NUM_INT_PS	100
 
 
 uint32_t printk(const char *fmt, ...);
@@ -16,8 +22,8 @@ union task_union task0 = {
 		.ldt = 
 		{ 
 			{.low_32 = 0, .high_32 = 0},			// null descriptor
-			{.low_32 = 0xFFF, .high_32 = 0xC0FA00},
-			{.low_32 = 0xFFF, .high_32 = 0xC0F200},
+			{.low_32 = 0xFFF, .high_32 = 0xC0FA00},	// code segment descriptor
+			{.low_32 = 0xFFF, .high_32 = 0xC0F200},	// data segment descriptor
 		}, 
 
 		.tss = 
@@ -114,8 +120,8 @@ void set_tss_desc(struct seg_desc *gdt_table, uint32_t index, uint32_t tss_data_
 				(0x9 << 8) | \
 				((tss_data_addr & 0xFF0000) >> 16);
 
-	printk("in set_tss_desc() low : %#x\n", low);
-	printk("in set_tss_desc() high : %#x\n", high);
+	//printk("in set_tss_desc() low : %#x\n", low);
+	//printk("in set_tss_desc() high : %#x\n", high);
 
 	gdt_table[index].low_32 = low;
 	gdt_table[index].high_32 = high;
@@ -156,11 +162,33 @@ void set_ldt_desc(struct seg_desc *gdt_table, uint32_t index, uint32_t ldt_data_
 }
 
 
+void timer_interrupt(void);
 
 void sched_init(void)
 {
-	TASK_LOAD_TR(0);
-	TASK_LOAD_LDTR(0);
+	uint32_t i;
+
+	set_tss_desc(&gdt, FIRST_TSS_DESC_INDEX, (uint32_t)(&task0.task.tss), DPL_0);
+	set_ldt_desc(&gdt, FIRST_LDT_DESC_INDEX, (uint32_t)(task0.task.ldt), DPL_0);
+
+	for(i = 1; i < NUMBER_OF_TASKS; i++)
+		tasks_ptr[i] = NULL;
+
+	for(i = FIRST_TSS_DESC_INDEX + 2; i < (NUMBER_OF_TASKS - 1) * 2; i++)
+	{
+		*((uint64_t*)(&gdt) + i) = 0;	// 其实已经在head.s中做过了 这里为了可读性再做一次
+	}
+
+
+	// 开始对8254进行编程
+	// 使用工作方式3 方波发生器 1秒产生100次中断
+	out_b(0x36, CMD_PORT_8254);
+	out_b((1193180 / NUM_INT_PS) & 0xFF, CR_PORT_8254);			// 先写低位
+	out_b(((1193180 / NUM_INT_PS) >> 8) & 0xFF, CR_PORT_8254);	// 再写高位
+
+	// program 8259 to enable timer0 interrupt
+	set_gate(&idt, 0x20, TRAP_GATE, KERNEL_CS, &timer_interrupt, DPL_0);
+	out_b(in_b(MASTER_8259_OPERATE_OCW1) & ~0x01, MASTER_8259_OPERATE_OCW1);
 }
 
 
@@ -264,5 +292,19 @@ void test_task0(void)
 	}
 }
 
+
+uint32_t do_timer_i = 0;
+uint32_t tim = 0;
+void do_timer_interrupt()
+{
+	do_timer_i++;
+
+	if(do_timer_i == 500)
+	{
+		tim++;
+		printk("in do_timer_interrupt() %d\n", tim);
+		do_timer_i = 0;
+	}
+}
 
 

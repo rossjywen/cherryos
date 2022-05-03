@@ -21,20 +21,13 @@ void assemble_label_show()
 
 int main()
 {
-	char *str = "hello Ross";
-
-	trap_init();
-
 	tty_init();
+	
+	trap_init();
 
 	assemble_label_show();
 
-	printk("string %s : len %d \n", str, strlen(str));
-
-	printk("struct tss_data size: %d\n", sizeof(struct tss_data));
-
-	set_tss_desc(&gdt, 4, (uint32_t)(&task0.task.tss), DPL_0);
-	set_ldt_desc(&gdt, 5, (uint32_t)(task0.task.ldt), DPL_0);
+	sched_init();
 
 	switch_to(0);
 }

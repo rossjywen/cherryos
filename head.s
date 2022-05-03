@@ -141,4 +141,6 @@ gdt:
 	db 0b1100_0000		; G=1 B=1 AVL=0 limit[19:16]=0x0
 	db 0x00				; base[32:24]=0
 
+	times 64 * 2 dq 0	; reserve space for 64 tasks
+
 
