@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <linux/mm.h>
 #include <linux/head.h>
+#include <linux/signal.h>
 
 
 #define NUMBER_OF_TASKS	64
@@ -12,12 +13,22 @@
 #define FIRST_TSS_DESC_INDEX	4
 #define FIRST_LDT_DESC_INDEX	(FIRST_TSS_DESC_INDEX + 1)
 
-// 下面这两个宏来根据任务号来计算相应的16-bit selector, RPL=3, TI=0 (GDT)
-#define _TSS(task_nr)	(((task_nr * 2 + FIRST_TSS_DESC_INDEX) << 3) + 3)
-#define _LDT(task_nr)	(((task_nr * 2 + FIRST_LDT_DESC_INDEX) << 3) + 3)
+// 下面这两个宏来根据任务号来计算相应的16-bit selector, RPL=0, TI=0 (GDT)
+#define _TSS(task_nr)	(((task_nr * 2 + FIRST_TSS_DESC_INDEX) << 3))
+#define _LDT(task_nr)	(((task_nr * 2 + FIRST_LDT_DESC_INDEX) << 3))
 
 #define TASK_LOAD_TR(task_nr)	asm("ltr %%ax"::"a"(_TSS(task_nr)))
 #define TASK_LOAD_LDTR(task_nr)	asm("lldt %%ax"::"a"(_LDT(task_nr)))
+
+
+#define switch_to(task_nr) \
+({ \
+	uint32_t tmp[2] = {0,0}; \
+	current = tasks_ptr[task_nr]; \
+	asm("movw %%ax, %1; \
+		 ljmp *%0;" \
+		 ::"m"(tmp[0]), "m"(tmp[1]), "a"(_TSS(task_nr))); \
+})
 
 
 struct tss_data
@@ -91,9 +102,32 @@ struct tss_data
 };
 
 
+enum task_state 
+{
+	TASK_RUNNING = 0, 
+	TASK_INTERRUPTIBLE, 
+	TASK_UNINTERRUPTIBLE, 
+	TASK_ZOMBIE, 
+	TASK_STOPPED
+};
+
 
 struct task_struct
 {
+	enum task_state state;
+
+	int32_t ts;			// time slice
+	
+	uint32_t signal;
+	struct sigaction sa[32];
+	uint32_t blocked;
+
+	int32_t alarm;
+
+	int32_t priority;
+	uint32_t uts;		// user time slice
+	uint32_t kts;		// kernel time slice
+
 	struct seg_desc ldt[3];
 
 	struct tss_data tss;
@@ -114,8 +148,10 @@ extern struct task_struct *tasks_ptr[NUMBER_OF_TASKS];
 extern union task_union task0;
 
 
-void switch_to(uint32_t task_number);
+void switch_to_TASK0(void);
 
+
+extern struct task_struct *current;
 
 #endif //SCHED_H
 

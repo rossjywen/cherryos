@@ -20,102 +20,201 @@ extern void general_protection_13(void);
 extern void page_fault_14(void);
 extern void coprocessor_error_16(void);
 
-
-void print_info_and_exit() 
+void print_context_info(uint32_t *esp, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags)
 {
-	//while(1) ;
-	// exit(11);
+	printk("eflags %#x\n", eflags);
+	printk("cs %#x\n", cs);
+	printk("eip %#x\n", eip);
+	//printk("\n", );
+	//printk("\n", );
+	//printk("\n", );
+	//printk("\n", );
+	//printk("\n", );
+	//printk("\n", );
+	//printk("\n", );
+	//printk("\n", );
+	//printk("\n", );
 }
 
-
-void do_divide_error_0()
+void do_divide_error_0(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
 {
 	printk("divide error\n");
-	print_info_and_exit();	
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_debug_1()
+void do_debug_1(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("debug exception\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_nmi_2()
+
+void do_nmi_2(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("nmi interrupt\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_int3_3()
+
+void do_int3_3(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	// print some info and return
 	printk("int3 exception\n");
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_overflow_4()
+
+void do_overflow_4(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("overflow exception\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_bounds_5()
+
+void do_bounds_5(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("bounds exception\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_invalid_op_6()
+
+void do_invalid_op_6(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("invalid op exception\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_device_not_available_7()
+
+void do_device_not_available_7(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("devicr not available exception\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_double_fault_8()
+
+void do_double_fault_8(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("double fault\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_invalid_TSS_10()
+
+void do_invalid_TSS_10(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("invalid TSS error\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_segment_not_present_11()
+
+void do_segment_not_present_11(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("segment not present exception\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_stack_segment_error_12()
+
+void do_stack_segment_error_12(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("stack segment error\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_general_protection_13()
+
+void do_general_protection_13(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("general protection\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_page_fault_14()
+
+void do_page_fault_14(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("page fault\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
-void do_coprocessor_error_16()
+
+void do_coprocessor_error_16(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
+						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
+						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+						uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
+
 {
 	printk("coprocessor error\n");
-	print_info_and_exit();
+	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
+	//exit(11);
 }
 
 
@@ -164,6 +263,12 @@ void trap_init(void)
 	set_gate(&idt, 16, TRAP_GATE, KERNEL_CS, &coprocessor_error_16, DPL_0);
 
 	// todo enable x87 with write OCW1 to 8259
+	// todo enable coprocessor interrupt
+	//set_trap_gate(45,&irq13);								// 调用了浮点错误的服务		判断是否是数学处理器造成的 是的话死机
+	//outb_p(inb_p(0x21)&0xfb,0x21);
+	//outb(inb_p(0xA1)&0xdf,0xA1);
+	// todo enable parallel port interrupt
+	//set_trap_gate(39,&parallel_interrupt);
 }
 
 

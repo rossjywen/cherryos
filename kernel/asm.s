@@ -243,6 +243,7 @@ error_code:
 	push edx
 	push edi
 	push esi
+	push ebp
 	push ds
 	push es
 	push fs
@@ -261,6 +262,7 @@ error_code:
 	pop es
 	pop ds
 	pop esi
+	pop ebp
 	pop edi
 	pop edx
 	pop ecx
@@ -278,7 +280,4 @@ timer_interrupt:
 
 	mov eax, do_timer_interrupt
 	jmp no_error_code
-
-	iret
-
 

@@ -29,7 +29,7 @@ int main()
 
 	sched_init();
 
-	switch_to(0);
+	switch_to_TASK0();
 }
 
 

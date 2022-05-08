@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <sys/types.h>
+#include <linux/kernel.h>
 
 static char buf[1024];
 
@@ -24,7 +25,16 @@ uint32_t printk(const char *fmt, ...)
 }
 
 
+// todo sys_sync()
+//void sys_sync(void);
 
+void panic(char *msg)
+{
+	printk("Kernel panic: %s\n", msg);
+
+
+	//sys_sync();
+}
 
 
 
