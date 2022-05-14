@@ -83,7 +83,7 @@ union task_union task0 = {
 			.ds = 0x17,		// 指向ldt中的第2个seg_desc -> data segment
 			.ds_pad = 0,
 
-			.fs = 0x17,		// 不使用fs 指向GDT的null descriptor
+			.fs = 0x17,		// 指向ldt中的第2个seg_desc -> data segment	
 			.fs_pad = 0,
 
 			.gs = 0,		// 不使用gs 指向GDT的null descriptor
@@ -168,7 +168,7 @@ union task_union task1 = {
 			.ds = 0x17,		// 指向ldt中的第2个seg_desc -> data segment
 			.ds_pad = 0,
 
-			.fs = 0x17,
+			.fs = 0x17,		// 指向ldt中的第2个seg_desc -> data segment
 			.fs_pad = 0,
 
 			.gs = 0,		// 不使用gs 指向GDT的null descriptor
@@ -392,6 +392,7 @@ void schedule(void)
 {
 	int32_t i;
 	int32_t next_task_nr = -1;
+	int32_t next_task_ts = 0;
 
 	// 1.check if there is signal pending, set task with signal pending to TASK_RUNNING
 	for(i = NUMBER_OF_TASKS - 1; i >= 0; i--)
@@ -412,16 +413,15 @@ void schedule(void)
 		}
 	}
 
-	// 2.select a task to switch to
+	// 2.select the task with most time slices to switch to
 	for(i = NUMBER_OF_TASKS - 1; i >= 0; i--)
 	{
-		if(tasks_ptr[i] != NULL)
+		if((tasks_ptr[i] != NULL) && \
+				(tasks_ptr[i]->state == TASK_RUNNING) && \
+				(tasks_ptr[i]->ts > next_task_ts))
 		{
-			if((tasks_ptr[i]->state == TASK_RUNNING) && \
-				(tasks_ptr[i]->ts > 0))
-			{
-				next_task_nr = i;
-			}
+			next_task_nr = i;
+			next_task_ts = tasks_ptr[i]->ts;
 		}
 	}
 
@@ -446,20 +446,10 @@ void schedule(void)
 
 
 
-uint32_t do_timer_i = 0;
-void do_timer_interrupt(uint32_t *esp_ptr, uint32_t error_code, uint32_t fs, uint32_t es, \
-						uint32_t ds, uint32_t ebp, uint32_t esi, uint32_t edi, \
-						uint32_t edx, uint32_t ecx, uint32_t ebx, uint32_t eax, \
+void do_timer_interrupt(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx, \
+						uint32_t edi, uint32_t esi, uint32_t ebp, uint32_t ds, uint32_t es, uint32_t fs, \
 						uint32_t eip, uint32_t cs, uint32_t eflags)
 {
-	//do_timer_i++;
-	//if(do_timer_i == 700)
-	//{
-	//	printk("do_timer_interrupt()\n");
-	//	print_context_info(esp_ptr, error_code, fs, es, ds, ebp, esi, edi, edx, ecx, ebx, eax, eip, cs, eflags);	
-	//	do_timer_i = 0;
-	//}
-	
 	// 1.jiffies 自增
 	jiffies++;
 

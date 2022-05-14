@@ -16,6 +16,8 @@ OBJS	= head.o \
 		  kernel/vsprintf.o \
 		  kernel/printk.o \
 		  kernel/sched.o \
+		  kernel/syscall.o \
+		  kernel/signal.o \
 		  driver/console.o \
 		  driver/keyboard.o \
 		  driver/tty_io.o \
@@ -64,6 +66,11 @@ clean :
 
 kernel/traps.o : kernel/traps.c
 kernel/asm.o : kernel/asm.s
+kernel/vsprintf.o : kernel/vsprintf.c
+kernel/printk.o : kernel/printk.c
+kernel/sched.o : kernel/sched.c
+kernel/syscall.o : kernel/syscall.s
+kernel/signal.o : kernel/signal.c
 	(cd kernel; make)
 
 driver/console.o : driver/console.c
@@ -72,6 +79,7 @@ driver/tty_io.o : driver/tty_io.c
 	(cd driver; make)
 
 lib/ctype.o : lib/ctype.c include/ctype.h
+lib/string.o : lib/string.c
 	(cd lib; make)
 
 

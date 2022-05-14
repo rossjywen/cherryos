@@ -41,5 +41,11 @@ struct sigaction
 
 #define SIG_BLOCKABLE (~(1 << (SIGKILL - 1) | 1 << (SIGSTOP - 1)))
 
+#define SIG_DFL		((void (*)(int))0)	/* default signal handling */
+#define SIG_IGN		((void (*)(int))1)	/* ignore signal */
+
+#define SA_NOMASK	0x40000000		// 不用修改current->blocked 所以也就不用保存和恢复
+#define SA_ONESHOT	0x80000000		// 实现传统的 signal()的效果 捕获信号的设置只生效一次
+
 #endif //SIGNAL_H
 

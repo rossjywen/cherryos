@@ -8,7 +8,9 @@ OBJS	= asm.o \
 		  traps.o \
 		  vsprintf.o \
 		  printk.o \
-		  sched.o
+		  sched.o \
+		  syscall.o \
+		  signal.o
 
 
 %.o : %.s
