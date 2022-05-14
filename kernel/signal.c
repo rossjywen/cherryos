@@ -5,6 +5,80 @@
 #include <asm/segment.h>
 
 
+int32_t sys_alarm(uint32_t seconds)
+{
+	int32_t old = current->alarm;
+
+	if (old)
+		old = (old - jiffies) / NUM_INT_PS;
+
+	current->alarm = (seconds > 0) ? (jiffies + NUM_INT_PS * seconds) : 0;
+
+	return (old);
+}
+
+
+int32_t sys_sgetmask()
+{
+	return current->blocked;
+}
+
+
+int32_t sys_ssetmask(int32_t newmask)
+{
+	int32_t old_mask = current->blocked;
+
+	current->blocked = newmask & ~(1<<(SIGKILL-1));
+
+	return old_mask;
+}
+
+
+int32_t sys_signal(uint32_t signum, uint32_t handler, uint32_t restorer)
+{
+	struct sigaction tmp;	
+	int32_t res;
+
+	if(signum < 1 || signum > 32 || signum == SIGKILL)
+		return -1;
+	
+	tmp.sa_handler = (void (*)(int)) handler;
+	tmp.sa_mask = 0;
+	tmp.sa_flags = SA_ONESHOT | SA_NOMASK;
+	tmp.sa_restorer = (void (*)(void)) restorer;
+
+	current->sa[signum - 1] = tmp;
+
+	res = (int32_t) (current->sa[signum-1].sa_handler);
+
+	return res;
+}
+
+
+// 注意 这里的 action 和 oldaction 都是指向用户空间的地址
+int32_t sys_sigaction(uint32_t signum, struct sigaction * action, struct sigaction * oldaction)
+{
+	struct sigaction tmp;	
+
+	if(signum < 1 || signum > 32 || signum == SIGKILL)
+		return -1;
+	
+	tmp = current->sa[signum - 1];
+
+	read_from_user((uint8_t *)action, (uint8_t *)(current->sa + signum - 1), sizeof(struct sigaction));
+
+	if (oldaction)
+		write_to_user((uint8_t *)&tmp, (uint8_t *)oldaction, sizeof(struct sigaction));
+	
+	if (current->sa[signum-1].sa_flags & SA_NOMASK)
+		current->sa[signum-1].sa_mask = 0;
+	else
+		current->sa[signum-1].sa_mask |= (1<<(signum-1));
+	
+	return 0;
+}
+
+
 void do_signal(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx, \
 			uint32_t edi, uint32_t esi, uint32_t ebp, uint32_t ds, uint32_t es, uint32_t fs, \
 			uint32_t eip, uint32_t cs, uint32_t eflags, uint32_t *esp, uint32_t ss)

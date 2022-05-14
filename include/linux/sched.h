@@ -31,6 +31,10 @@
 })
 
 
+extern int32_t volatile jiffies;
+#define NUM_INT_PS	100
+
+
 struct tss_data
 {
 	uint16_t pre_task_link;
@@ -118,9 +122,9 @@ struct task_struct
 
 	int32_t ts;			// time slice
 	
-	uint32_t signal;
+	int32_t signal;
 	struct sigaction sa[32];
-	uint32_t blocked;
+	int32_t blocked;
 
 	int32_t alarm;
 

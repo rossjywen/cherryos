@@ -6,9 +6,8 @@
 #include <asm/io.h>
 
 
-#define NUM_INT_PS	100
 
-uint64_t volatile jiffies = 0;
+int32_t volatile jiffies = 0;
 
 struct task_struct *current = NULL;
 

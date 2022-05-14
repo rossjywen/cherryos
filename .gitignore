@@ -9,6 +9,11 @@ bximage
 *.img
 *.swp
 
+bootsect_bin
+kernel_bin
+kernel_img
+setup_bin
+
 .cproject
 .project
 .settings/

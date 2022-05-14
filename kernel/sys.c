@@ -2,7 +2,7 @@
 #include <asm/system.h>
 
 
-
+#define NR_OF_SYSCALLS	72
 
 //int sys_setup();
 //int sys_exit();
@@ -31,7 +31,7 @@
 //int sys_getuid();
 //int sys_stime();
 //int sys_ptrace();
-//int sys_alarm();
+int sys_alarm();
 //int sys_fstat();
 //int sys_pause();
 //int sys_utime();
@@ -52,7 +52,7 @@
 //int sys_brk();
 //int sys_setgid();
 //int sys_getgid();
-//int sys_signal();
+int sys_signal();
 //int sys_geteuid();
 //int sys_getegid();
 //int sys_acct();
@@ -71,95 +71,94 @@
 //int sys_getppid();
 //int sys_getpgrp();
 //int sys_setsid();
-//int sys_sigaction();
-//int sys_sgetmask();
-//int sys_ssetmask();
+int sys_sigaction();
+int sys_sgetmask();
+int sys_ssetmask();
 //int sys_setreuid();
 //int sys_setregid();
 
 typedef int (*fn_ptr)();
 
-// 注意 这个数组中元素的下标一定要和unistd.h中的__NR##func_name 相对应
-fn_ptr system_call_table[] = 
-{ 
-	//sys_setup, 		// 0
-	//sys_exit, 		// 1
-	//sys_fork, 		// 2
-	//sys_read,		// 3
-	//sys_write, 		// 4
-	//sys_open, 		// 5
-	//sys_close, 		// 6
-	//sys_waitpid, 	// 7
-	//sys_creat, 
-	//sys_link,
-	//sys_unlink, 
-	//sys_execve, 
-	//sys_chdir, 
-	//sys_time, 
-	//sys_mknod, 
-	//sys_chmod,
-	//sys_chown, 
-	//sys_break, 
-	//sys_stat, 
-	//sys_lseek, 
-	//sys_getpid, 
-	//sys_mount,
-	//sys_umount, 
-	//sys_setuid, 
-	//sys_getuid, 
-	//sys_stime, 
-	//sys_ptrace, 
-	//sys_alarm,
-	//sys_fstat, 
-	//sys_pause, 
-	//sys_utime, 
-	//sys_stty, 
-	//sys_gtty, 
-	//sys_access,
-	//sys_nice, 
-	//sys_ftime, 
-	//sys_sync,
-	//sys_kill, 
-	//sys_rename, 
-	//sys_mkdir,
-	//sys_rmdir,
-	//sys_dup, 
-	//sys_pipe, 
-	//sys_times, 
-	//sys_prof, 
-	//sys_brk, 
-	//sys_setgid,
-	//sys_getgid, 
-	//sys_signal, 
-	//sys_geteuid, 
-	//sys_getegid, 
-	//sys_acct, 
-	//sys_phys,
-	//sys_lock, 
-	//sys_ioctl, 
-	//sys_fcntl, 
-	//sys_mpx, 
-	//sys_setpgid, 
-	//sys_ulimit,
-	//sys_uname, 
-	//sys_umask, 
-	//sys_chroot, 
-	//sys_ustat, 
-	//sys_dup2, 
-	//sys_getppid,
-	//sys_getpgrp, 
-	//sys_setsid, 
-	//sys_sigaction, 
-	//sys_sgetmask, 
-	//sys_ssetmask,
-	//sys_setreuid,
-	//sys_setregid 
-};
+
+fn_ptr system_call_table[NR_OF_SYSCALLS];	// 注意 这个数组中元素的下标一定要和unistd.h中的__NR##func_name 相对应
 
 void system_call(void);
 
 void system_call_init(void)
 {
+	//system_call_table[0] = sys_setup;
+	//system_call_table[1] = sys_exit;
+	//system_call_table[2] = sys_fork;
+	//system_call_table[3] = sys_read;
+	//system_call_table[4] = sys_write;
+	//system_call_table[5] = sys_open;
+	//system_call_table[6] = sys_close;
+	//system_call_table[7] = sys_waitpid;
+	//system_call_table[8] = sys_creat, 
+	//system_call_table[9] = sys_link,
+	//system_call_table[10] = sys_unlink, 
+	//system_call_table[11] = sys_execve, 
+	//system_call_table[12] = sys_chdir, 
+	//system_call_table[13] = sys_time, 
+	//system_call_table[14] = sys_mknod, 
+	//system_call_table[15] = sys_chmod,
+	//system_call_table[16] = sys_chown, 
+	//system_call_table[17] = sys_break, 
+	//system_call_table[18] = sys_stat, 
+	//system_call_table[19] = sys_lseek, 
+	//system_call_table[20] = sys_getpid, 
+	//system_call_table[21] = sys_mount,
+	//system_call_table[22] = sys_umount, 
+	//system_call_table[23] = sys_setuid, 
+	//system_call_table[24] = sys_getuid, 
+	//system_call_table[25] = sys_stime, 
+	//system_call_table[26] = sys_ptrace, 
+	system_call_table[27] = sys_alarm;
+	//system_call_table[28] = sys_fstat, 
+	//system_call_table[29] = sys_pause, 
+	//system_call_table[30] = sys_utime, 
+	//system_call_table[31] = sys_stty, 
+	//system_call_table[32] = sys_gtty, 
+	//system_call_table[33] = sys_access,
+	//system_call_table[34] = sys_nice, 
+	//system_call_table[35] = sys_ftime, 
+	//system_call_table[36] = sys_sync,
+	//system_call_table[37] = sys_kill, 
+	//system_call_table[38] = sys_rename, 
+	//system_call_table[39] = sys_mkdir,
+	//system_call_table[40] = sys_rmdir,
+	//system_call_table[41] = sys_dup, 
+	//system_call_table[42] = sys_pipe, 
+	//system_call_table[43] = sys_times, 
+	//system_call_table[44] = sys_prof, 
+	//system_call_table[45] = sys_brk, 
+	//system_call_table[46] = sys_setgid,
+	//system_call_table[47] = sys_getgid, 
+	system_call_table[48] = sys_signal;
+	//system_call_table[49] = sys_geteuid, 
+	//system_call_table[50] = sys_getegid, 
+	//system_call_table[51] = sys_acct, 
+	//system_call_table[52] = sys_phys,
+	//system_call_table[53] = sys_lock, 
+	//system_call_table[54] = sys_ioctl, 
+	//system_call_table[55] = sys_fcntl, 
+	//system_call_table[56] = sys_mpx, 
+	//system_call_table[57] = sys_setpgid, 
+	//system_call_table[58] = sys_ulimit,
+	//system_call_table[59] = sys_uname, 
+	//system_call_table[60] = sys_umask, 
+	//system_call_table[61] = sys_chroot, 
+	//system_call_table[62] = sys_ustat, 
+	//system_call_table[63] = sys_dup2, 
+	//system_call_table[64] = sys_getppid,
+	//system_call_table[65] = sys_getpgrp, 
+	//system_call_table[66] = sys_setsid, 
+	system_call_table[67] = sys_sigaction;
+	system_call_table[68] = sys_sgetmask;
+	system_call_table[69] = sys_ssetmask,
+	//system_call_table[70] = sys_setreuid,
+	//system_call_table[71] = sys_setregid 
+
 	set_gate(&idt, 0x80, INTERRUPT_GATE, KERNEL_CS, &system_call, DPL_3);
 }
 
