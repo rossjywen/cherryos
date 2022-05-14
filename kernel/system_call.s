@@ -5,8 +5,13 @@
 ; 我不打算像linux-0.11那样在汇编层面实现很多功能 而是更多的放在C层面实现
 
 extern do_timer_interrupt, do_signal
+extern system_call_table
 
-global  timer_interrupt
+global  timer_interrupt, system_call
+
+
+NUMBER_OF_SYSCALLS equ 72
+
 
 ; interrupt/exception without CPL change
 ; note: if a task was interrupted by 8254 in kernel mode
@@ -20,7 +25,7 @@ global  timer_interrupt
 ; | 3.old EIP    | <- esp
 ; +--------------+
 
-; if it is int 0x80 the eax maintains syscall number
+; if it is int 0x80 the eax maintains system call number
 ; CS (and SS if interrupted not in system call) are automatically switched 
 ; during access program with entry in IDT
 
@@ -48,9 +53,14 @@ global  timer_interrupt
 ; +--------------+
 
 
+bad_system_call:
+	mov eax, -1	; 设置返回值为-1 然后返回
+	iret
+
+
 ; 1. detect signal pending and call do_signal()
 ; 2.
-ret_from_syscall:
+ret_from_system_call:
 	call do_signal
 
 	pop eax
@@ -91,10 +101,33 @@ timer_interrupt:
 
 	call  do_timer_interrupt
 
-	jmp ret_from_syscall
+	jmp ret_from_system_call
 
 	
+system_call:
+	cmp eax, NUMBER_OF_SYSCALLS-1	; 检测是否是正确的系统调用号范围
+	ja bad_system_call
 
+	push fs
+	push es
+	push ds
+	push ebp
+	push esi	; 其实没必要保存 
+	push edi	; 因为gcc确保了c函数即使使用了esi edi返回的时候也会恢复
+	push edx	; p3
+	push ecx	; p2
+	push ebx	; p1
 
+	mov bx, 0x10	; 切换到内核态的ds 和es
+	mov ds, bx
+	mov es, bx
+	mov bx, 0x17	; 确保fs指向用户代码的数据段
+	mov fs, bx
+
+	mov ebx, [system_call_table]	; 和gas不同 nasm的extern只能拿到内存地址 取出值才是指针
+	call [ebx + 4 * eax]			; eax是系统调用号 也就是system_call_table的数组下标
+	push eax						; 这是要和ret_from_system_call保持一致
+
+	jmp ret_from_system_call
 
 

@@ -8,6 +8,7 @@
 void trap_init(void);
 void tty_init(void);
 void sched_init(void);
+void system_call_init(void);
 
 
 void assemble_label_show()
@@ -28,6 +29,8 @@ int main()
 	assemble_label_show();
 
 	sched_init();
+	
+	system_call_init();
 
 	switch_to_TASK0();
 }

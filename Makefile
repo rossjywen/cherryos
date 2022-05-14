@@ -16,8 +16,9 @@ OBJS	= head.o \
 		  kernel/vsprintf.o \
 		  kernel/printk.o \
 		  kernel/sched.o \
-		  kernel/syscall.o \
+		  kernel/system_call.o \
 		  kernel/signal.o \
+		  kernel/sys.o \
 		  driver/console.o \
 		  driver/keyboard.o \
 		  driver/tty_io.o \
@@ -69,8 +70,9 @@ kernel/asm.o : kernel/asm.s
 kernel/vsprintf.o : kernel/vsprintf.c
 kernel/printk.o : kernel/printk.c
 kernel/sched.o : kernel/sched.c
-kernel/syscall.o : kernel/syscall.s
+kernel/system_call.o : kernel/system_call.s
 kernel/signal.o : kernel/signal.c
+kernel/sys.o : kernel/sys.c
 	(cd kernel; make)
 
 driver/console.o : driver/console.c
