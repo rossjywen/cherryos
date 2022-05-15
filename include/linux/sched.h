@@ -128,12 +128,28 @@ struct task_struct
 
 	int32_t alarm;
 
-	int32_t priority;
+	int32_t priority;	// nice value, also distributed time slice in schedule()
+
+	/* pid related */
+	int32_t pid;		// process id
+	int32_t father;		// father task pid
+
+	/* uid related */
+	uint16_t uid;		// real uid (the uid which created the task)
+	uint16_t euid;		// the effective uid which may grant more permission than uid like 'sudo'
+	uint16_t suid;		// saved uid
+
+	/* gid related */
+	uint16_t gid;		// real gid
+	uint16_t egid;		// effective gid
+	uint16_t sgid;		// saved gid
+
+	/* statistics related */
 	uint32_t uts;		// user time slice
 	uint32_t kts;		// kernel time slice
 
+	/* x86 related */
 	struct seg_desc ldt[3];
-
 	struct tss_data tss;
 };
 

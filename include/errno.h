@@ -2,6 +2,10 @@
 #define ERRNO_H
 
 
+#define ENOSYS		38
+
+
 extern int errno;
 
-#endif
+#endif // ERRNO_H
+

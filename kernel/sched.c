@@ -511,3 +511,63 @@ void test_task1(void)
 	}
 }
 
+
+
+int sys_pause(void)
+{
+	current->state = TASK_INTERRUPTIBLE;
+	schedule();
+	return 0;
+}
+
+int sys_getpid(void)
+{
+	return current->pid;
+}
+
+int sys_getppid(void)
+{
+	return current->father;
+}
+
+int sys_getuid(void)
+{
+	return current->uid;
+}
+
+int sys_geteuid(void)
+{
+	return current->euid;
+}
+
+int sys_getgid(void)
+{
+	return current->gid;
+}
+
+int sys_getegid(void)
+{
+	return current->egid;
+}
+
+/*
+	linux-0.11实现nice()和现在的nice不同
+	这是因为在0.11中nice值越大就会分配到更多的执行时间
+	这与现在linux的nice的效果相反 
+*/
+int sys_nice(int32_t increment)
+{
+	if (current->priority-increment>0)
+	{
+		current->priority -= increment;
+	}
+	else
+	{
+		if(current->euid == 0)	// root
+			current->priority -= increment;
+
+	}
+	return 0;
+}
+
+
