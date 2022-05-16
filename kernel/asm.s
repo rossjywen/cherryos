@@ -86,7 +86,7 @@ double_fault_8: ; vector 8, no error code
 
 
 invalid_TSS_10: ; vector 10, error code
-	xchg eax, [esp]		; eax contains error code
+	xchg eax, ss:[esp]		; eax contains error code
 						; because SS points to same segment of DS
 						; so do not need to specify SS:ESP
 	push ebx
@@ -95,35 +95,35 @@ invalid_TSS_10: ; vector 10, error code
 
 
 segment_not_present_11: ; vector 11, error code
-	xchg eax, [esp]	
+	xchg eax, ss:[esp]	
 	push ebx
 	mov ebx, do_segment_not_present_11
 	jmp error_code
 
 
 stack_segment_error_12: ; vector 12, error code
-	xchg eax, [esp]	
+	xchg eax, ss:[esp]	
 	push ebx
 	mov ebx, do_stack_segment_error_12
 	jmp error_code
 
 
 general_protection_13: ; vector 13, error code
-	xchg eax, [esp]	
+	xchg eax, ss:[esp]	
 	push ebx
 	mov ebx, do_general_protection_13
 	jmp error_code
 
 
 page_fault_14: ; vector 14, error code
-	xchg eax, [esp]	
+	xchg eax, ss:[esp]	
 	push ebx
 	mov ebx, do_page_fault_14
 	jmp error_code
 
 
 coprocessor_error_16: ; vector 15, error code
-	xchg eax, [esp]	
+	xchg eax, ss:[esp]	
 	push ebx
 	mov ebx, do_coprocessor_error_16
 	jmp error_code
