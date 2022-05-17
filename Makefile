@@ -19,6 +19,8 @@ OBJS	= head.o \
 		  kernel/system_call.o \
 		  kernel/signal.o \
 		  kernel/sys.o \
+		  mm/page.o \
+		  mm/memory.o \
 		  driver/console.o \
 		  driver/keyboard.o \
 		  driver/tty_io.o \
@@ -61,6 +63,7 @@ clean :
 	rm -f kernel_bin
 	rm -f kernel_img
 	(cd kernel; make clean)
+	(cd mm; make clean)
 	(cd driver; make clean)
 	(cd lib; make clean)
 
@@ -74,6 +77,10 @@ kernel/system_call.o : kernel/system_call.s
 kernel/signal.o : kernel/signal.c
 kernel/sys.o : kernel/sys.c
 	(cd kernel; make)
+
+mm/page.o : mm/page.s
+mm/memory.o : mm/memory.c
+	(cd mm; make)
 
 driver/console.o : driver/console.c
 driver/keyboard.o : driver/keyboard.s
