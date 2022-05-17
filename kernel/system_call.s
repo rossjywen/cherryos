@@ -4,10 +4,10 @@
 ; 和kernel/asm.s不同的地方还包括这里处理完中断之后还需要检查信号量
 ; 我不打算像linux-0.11那样在汇编层面实现很多功能 而是更多的放在C层面实现
 
-extern do_timer_interrupt, do_signal
+extern do_timer_interrupt, do_signal, copy_process
 extern system_call_table
 
-global  timer_interrupt, system_call
+global  timer_interrupt, system_call, sys_fork
 
 
 NUMBER_OF_SYSCALLS equ 72
@@ -79,9 +79,6 @@ ret_from_system_call:
 
 
 timer_interrupt:
-	mov al, 0x20
-	out 0x20, al
-
 	push fs
 	push es
 	push ds
@@ -100,6 +97,9 @@ timer_interrupt:
 	mov fs, ax
 
 	call  do_timer_interrupt
+	
+	mov al, 0x20
+	out 0x20, al
 
 	jmp ret_from_system_call
 
@@ -112,7 +112,7 @@ system_call:
 	push es
 	push ds
 	push ebp
-	push esi	; 其实没必要保存 
+	push esi	; 其实没必要保存 但我为了调用fork更方便 就压了 
 	push edi	; 因为gcc确保了c函数即使使用了esi edi返回的时候也会恢复
 	push edx	; p3
 	push ecx	; p2
@@ -129,5 +129,13 @@ system_call:
 	push eax						; 这是要和ret_from_system_call保持一致
 
 	jmp ret_from_system_call
+
+
+
+sys_fork:
+	call copy_process
+	ret
+
+
 
 

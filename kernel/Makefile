@@ -11,7 +11,8 @@ OBJS	= asm.o \
 		  sched.o \
 		  system_call.o \
 		  signal.o \
-		  sys.o
+		  sys.o \
+		  fork.o
 
 
 %.o : %.s

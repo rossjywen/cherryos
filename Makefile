@@ -19,6 +19,7 @@ OBJS	= head.o \
 		  kernel/system_call.o \
 		  kernel/signal.o \
 		  kernel/sys.o \
+		  kernel/fork.o \
 		  mm/page.o \
 		  mm/memory.o \
 		  driver/console.o \
@@ -76,6 +77,7 @@ kernel/sched.o : kernel/sched.c
 kernel/system_call.o : kernel/system_call.s
 kernel/signal.o : kernel/signal.c
 kernel/sys.o : kernel/sys.c
+kernel/fork.o : kernel/fork.c
 	(cd kernel; make)
 
 mm/page.o : mm/page.s

@@ -7,7 +7,7 @@
 
 //int sys_setup();
 //int sys_exit();
-//int sys_fork();
+int sys_fork();
 //int sys_read();
 //int sys_write();
 //int sys_open();
@@ -89,7 +89,7 @@ void system_call_init(void)
 {
 	//system_call_table[0] = sys_setup;
 	//system_call_table[1] = sys_exit;
-	//system_call_table[2] = sys_fork;
+	system_call_table[2] = sys_fork;
 	//system_call_table[3] = sys_read;
 	//system_call_table[4] = sys_write;
 	//system_call_table[5] = sys_open;
