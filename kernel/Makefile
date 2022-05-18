@@ -12,7 +12,8 @@ OBJS	= asm.o \
 		  system_call.o \
 		  signal.o \
 		  sys.o \
-		  fork.o
+		  fork.o \
+		  exit.o
 
 
 %.o : %.s

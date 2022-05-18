@@ -119,20 +119,21 @@ enum task_state
 struct task_struct
 {
 	enum task_state state;
+	int32_t exit_code;
 
 	int32_t ts;			// time slice
+	int32_t priority;	// nice value, also distributed time slice in schedule()
 	
 	int32_t signal;
 	struct sigaction sa[32];
 	int32_t blocked;
-
 	int32_t alarm;
 
-	int32_t priority;	// nice value, also distributed time slice in schedule()
 
 	/* pid related */
 	int32_t pid;		// process id
 	int32_t father;		// father task pid
+	int32_t pgrp;		// process group id
 
 	/* uid related */
 	uint16_t uid;		// real uid (the uid which created the task)
@@ -143,6 +144,10 @@ struct task_struct
 	uint16_t gid;		// real gid
 	uint16_t egid;		// effective gid
 	uint16_t sgid;		// saved gid
+
+	/* session related */
+	int32_t session;	// session id
+	int32_t leader;		// whether is session leader
 
 	/* statistics related */
 	uint32_t uts;		// user time slice
@@ -163,14 +168,13 @@ union task_union
 
 
 
-extern struct task_struct *tasks_ptr[NUMBER_OF_TASKS];
-
-extern union task_union task0;
-
-
+struct task_struct * find_pid_task(int32_t pid);
 void switch_to_TASK0(void);
+void schedule(void);
 
 
+extern struct task_struct *tasks_ptr[NUMBER_OF_TASKS];
+extern union task_union task0;
 extern struct task_struct *current;
 
 #endif //SCHED_H

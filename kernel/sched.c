@@ -6,16 +6,14 @@
 #include <asm/io.h>
 
 
-
 int32_t volatile jiffies = 0;
 
 struct task_struct *current = NULL;
 
 
-
 void test_task0(void);
 uint8_t task0_user_stack[PAGE_SIZE];
-union task_union task0 = { 
+union task_union task0 = { 	// todo other fields initilization
 	.task = 
 	{ 
 		.state = TASK_RUNNING,
@@ -93,99 +91,31 @@ union task_union task0 = {
 
 			.debug_trap = 0,
 
-			.io_map_base = 0,
-		},
-	},
-};
-
-void test_task1(void);
-uint8_t task1_user_stack[PAGE_SIZE];
-union task_union task1 = { 
-	.task = 
-	{ 
-		.state = TASK_RUNNING,
-
-		.ts = 0,
-
-		.signal = 0,
-		.sa = {{},},
-		.blocked = 0,
-		.alarm = 0,
-
-		.priority = 15,
-		.uts = 0,
-		.kts = 0,
-
-		.ldt = 
-		{ 
-			{.low_32 = 0, .high_32 = 0},			// null descriptor
-			{.low_32 = 0xFFF, .high_32 = 0xC0FA00},	// code segment descriptor
-			{.low_32 = 0xFFF, .high_32 = 0xC0F200},	// data segment descriptor
-		}, 
-
-		.tss = 
-		{ 
-			.pre_task_link = 0,					// 不会设置eflags.nt 所以不会用到
-			.pre_task_link_pad = 0, 
-			
-			.esp0 = (uint32_t)(task1.stack + PAGE_SIZE - 1),	// 内核栈 esp0指向task_union内存最高点
-			.ss0 = 0x10,										// 内核栈 ss0指向内核数据段
-			.ss0_pad = 0,
-
-			.esp1 = 0,							// CPL=1 CPL=2 的栈都忽略不使用
-			.ss1 = 0,
-			.ss1_pad = 0,
-
-			.esp2 = 0,
-			.ss2 = 0,
-			.ss2_pad = 0,
-
-			.cr3 =  (uint32_t)(&page_dir),		// 所有的任务都和kernel一样 用page_dir作为cr3的值
-			
-			.eip =  (uint32_t)test_task1,		// 我打算给指向一个函数
-
-			.eflags = 0x00003202,	// 这是根据手册中eflag的初值设定的
-
-			.eax = 0,		// 所有通用寄存器初始化为0
-			.ecx = 0,
-			.edx = 0,
-			.ebx = 0,
-			.esp = (uint32_t)(task1_user_stack) + PAGE_SIZE - 1,
-			.ebp = 0,
-			.esi = 0,
-			.edi = 0,
-
-			.es = 0x17,		// 指向ldt中的第2个seg_desc -> data segment
-			.es_pad = 0,
-
-			.cs = 0x0F,		// 指向ldt中的第1个seg_desc -> code segment
-			.cs_pad = 0,
-
-			.ss = 0x17,		// 指向ldt中的第2个seg_desc -> data segment
-			.ss_pad = 0,
-
-			.ds = 0x17,		// 指向ldt中的第2个seg_desc -> data segment
-			.ds_pad = 0,
-
-			.fs = 0x17,		// 指向ldt中的第2个seg_desc -> data segment
-			.fs_pad = 0,
-
-			.gs = 0,		// 不使用gs 指向GDT的null descriptor
-			.gs_pad = 0,
-
-			.ldt = _LDT(1),
-			.ldt_pad = 0,
-
-			.debug_trap = 0,
-
-			.io_map_base = 0,
+			.io_map_base = 104,	// 大于等于segment.limit就说明不使用这个功能
 		},
 	},
 };
 
 
+struct task_struct *tasks_ptr[NUMBER_OF_TASKS] = {&task0.task,};
 
-struct task_struct *tasks_ptr[NUMBER_OF_TASKS] = {&task0.task, &task1.task};
+
+struct task_struct * find_pid_task(int32_t pid)
+{
+	uint32_t i;
+
+	for(i = 1; i < NUMBER_OF_TASKS; i++)
+	{
+		if((tasks_ptr[i] != NULL) && (tasks_ptr[i]->pid == pid))
+			break;
+	}
+
+	if(i == NUMBER_OF_TASKS)
+		return NULL;
+	else
+		return tasks_ptr[i];
+}
+
 
 void set_tss_desc(struct seg_desc *gdt_table, uint32_t index, uint32_t tss_data_addr, uint8_t dpl)
 {
@@ -268,17 +198,17 @@ void sched_init(void)
 
 	set_tss_desc(&gdt, FIRST_TSS_DESC_INDEX, (uint32_t)(&task0.task.tss), DPL_0);
 	set_ldt_desc(&gdt, FIRST_LDT_DESC_INDEX, (uint32_t)(task0.task.ldt), DPL_0);
-	
-	for(i = 2; i < NUMBER_OF_TASKS; i++)
+
+	for(i = 1; i < NUMBER_OF_TASKS; i++)
 		tasks_ptr[i] = NULL;
 
-	//for(i = FIRST_TSS_DESC_INDEX + 2; i < (NUMBER_OF_TASKS - 1) * 2; i++)
-	//{
-	//	*((uint64_t*)(&gdt) + i) = 0;	// 其实已经在head.s中做过了 这里为了可读性再做一次
-	//}
 
-	set_tss_desc(&gdt, FIRST_TSS_DESC_INDEX+2, (uint32_t)(&task1.task.tss), DPL_0);
-	set_ldt_desc(&gdt, FIRST_LDT_DESC_INDEX+2, (uint32_t)(task1.task.ldt), DPL_0);
+	for(i = FIRST_TSS_DESC_INDEX + 2; i < (NUMBER_OF_TASKS - 1) * 2; i++)
+	{
+		*((uint64_t*)(&gdt) + i) = 0;	// 其实已经在head.s中做过了 这里为了可读性再做一次
+										// 如果打开task1 就需要把这段注释掉
+	}
+
 
 	// 开始对8254进行编程
 	// 使用工作方式3 方波发生器 1秒产生100次中断
@@ -494,23 +424,6 @@ void test_task0(void)
 		}
 	}
 }
-
-void test_task1(void)
-{
-	uint32_t i = 0;
-
-	while(1)
-	{
-		i++;
-		if(i == 10000000)
-		{
-			printk("in test_task1\n");
-			printk("current->ts %d\n", current->ts);
-			i = 0;
-		}
-	}
-}
-
 
 
 int sys_pause(void)

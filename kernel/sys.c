@@ -6,7 +6,7 @@
 #define NR_OF_SYSCALLS	72
 
 //int sys_setup();
-//int sys_exit();
+int sys_exit();
 int sys_fork();
 //int sys_read();
 //int sys_write();
@@ -34,7 +34,7 @@ int sys_getuid();
 int sys_ptrace();
 int sys_alarm();
 //int sys_fstat();
-//int sys_pause();
+int sys_pause();
 //int sys_utime();
 int sys_stty();
 int sys_gtty();
@@ -42,7 +42,7 @@ int sys_gtty();
 int sys_nice();
 int sys_ftime();
 //int sys_sync();
-//int sys_kill();
+int sys_kill();
 int sys_rename();
 //int sys_mkdir();
 //int sys_rmdir();
@@ -88,7 +88,7 @@ void system_call(void);
 void system_call_init(void)
 {
 	//system_call_table[0] = sys_setup;
-	//system_call_table[1] = sys_exit;
+	system_call_table[1] = sys_exit;
 	system_call_table[2] = sys_fork;
 	//system_call_table[3] = sys_read;
 	//system_call_table[4] = sys_write;
@@ -116,7 +116,7 @@ void system_call_init(void)
 	system_call_table[26] = sys_ptrace;
 	system_call_table[27] = sys_alarm;
 	//system_call_table[28] = sys_fstat, 
-	//system_call_table[29] = sys_pause, 
+	system_call_table[29] = sys_pause;
 	//system_call_table[30] = sys_utime, 
 	system_call_table[31] = sys_stty;
 	system_call_table[32] = sys_gtty;
@@ -124,7 +124,7 @@ void system_call_init(void)
 	system_call_table[34] = sys_nice;
 	system_call_table[35] = sys_ftime;
 	//system_call_table[36] = sys_sync,
-	//system_call_table[37] = sys_kill, 
+	system_call_table[37] = sys_kill;
 	system_call_table[38] = sys_rename;
 	//system_call_table[39] = sys_mkdir,
 	//system_call_table[40] = sys_rmdir,
