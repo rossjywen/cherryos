@@ -32,7 +32,7 @@ union task_union task0 = { 	// todo other fields initilization
 		.ldt = 
 		{ 
 			{.low_32 = 0, .high_32 = 0},			// null descriptor
-			{.low_32 = 0xFFF, .high_32 = 0xC0FA00},	// code segment descriptor
+			{.low_32 = 0xFFF, .high_32 = 0xC0FA00},	// code segment descriptor todo 16MB
 			{.low_32 = 0xFFF, .high_32 = 0xC0F200},	// data segment descriptor
 		}, 
 
