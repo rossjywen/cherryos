@@ -2,11 +2,55 @@
 #include <linux/sched.h>
 #include <linux/mm.h>
 #include <linux/head.h>
+#include <linux/kernel.h>
 #include <asm/system.h>
 #include <errno.h>
 
 
 int32_t last_pid = 0;
+
+
+int32_t copy_mem(int32_t task_nr, struct task_struct *p)
+{
+	uint32_t old_code_base, old_data_base;
+	uint32_t old_code_limit, old_data_limit;
+	uint32_t new_base = task_nr * 0x4000000;
+
+	old_code_base = get_segment_base(&(current->ldt[1]));
+	old_data_base = get_segment_base(&(current->ldt[2]));
+	old_code_limit = get_segment_limit(0x000F);
+	old_data_limit = get_segment_limit(0x0017);
+
+	if(old_code_base != old_data_base)
+		panic("segment base error\n");
+	if(old_code_limit > old_data_limit)
+		panic("segment limit error\n");
+
+	set_segment_base(&(p->ldt[1]), new_base);	// code
+	set_segment_base(&(p->ldt[2]), new_base);	// data
+
+	printk("new_base %#x\n", new_base);
+	printk("code hi32 %#x\n", p->ldt[1].high_32);
+	printk("code low32 %#x\n", p->ldt[1].low_32);
+	printk("old code limit %#x\n", old_code_limit);
+	//while(1);
+
+	if(task_nr == 1)	// because my kernel uses 4MB pages so at this point I have to
+	{					// do some perticular stuff on task1(init task)
+		init_task1_paging();
+	}
+	else
+	{
+		if (copy_page_tables(old_data_base, new_base, old_data_limit))
+		{
+			free_page_tables(new_base, old_data_limit);
+			return -ENOMEM;
+		}
+	}
+
+	return 0;
+}
+
 
 
 int find_empty_process(void)
@@ -40,8 +84,8 @@ int find_empty_process(void)
 	return 0;
 }
 
-
-int copy_process(uint32_t ebx, uint32_t ecx, uint32_t edx, uint32_t edi, uint32_t esi, \
+// parameter 'unused' is the eip pushed by hardware for sys_fork()
+int copy_process(uint32_t unused, uint32_t ebx, uint32_t ecx, uint32_t edx, uint32_t edi, uint32_t esi, \
 				 uint32_t ebp, uint32_t ds, uint32_t es, uint32_t fs, uint32_t eip, \
 				 uint32_t cs, uint32_t eflags, uint32_t esp, uint32_t ss)
 {
@@ -51,32 +95,39 @@ int copy_process(uint32_t ebx, uint32_t ecx, uint32_t edx, uint32_t edi, uint32_
 	nxt_task_index = find_empty_process();
 
 	if(nxt_task_index == 0)		// 说明tasks_ptr[]数组中没有null的entry了
-	{
 		return -EAGAIN;
-	}
+
+	printk("--- in fork() ---\n");
+	printk("task nr %d\n", nxt_task_index);
+	printk("last pid %d\n", last_pid);
+	printk("ds 0x%lx\n", ds);
+	printk("cs 0x%lx\n", cs);
+	printk("eip 0x%lx\n", eip);
+	printk("eflags 0x%lx\n", eflags);
+	//printk("0x%lx\n", );
+	printk("-----------------\n");
 
 	// 到这里说明找到了null的entry
 
-	// todo get_free_page()
 	// 分配1个4k页空间存放task_union
-	// p = (struct task_struct*)get_free_page();
+	p = (struct task_struct*)get_free_page();
 	tasks_ptr[nxt_task_index] = p;
 
-	// todo 一个一个写
-	*p = *current; 			// 先把current 也就是这个进程的父进程的信息copy过来 
-							// 然后再把不一样的修改了 
+	*p = *current; 			// 先把父进程的信息copy过来 然后再把不一样的修改了
+
 	p->state = TASK_UNINTERRUPTIBLE;	// 在状态设置好之前 千万不能被中断程序调度
 	p->pid = last_pid;
 	p->father = current->pid;
 	p->ts = current->priority;	// 时间片和优先级继承了父进程
 	p->signal = 0;			// pending的信号清零
 	p->alarm = 0;			// alarm清零
-	//p->leader todo
-	//p->utime todo
-	//p->stime todo
-	//p->cutime todo
-	//p->cstime todo
+	p->leader = 0;
+	p->uts = 0;
+	p->kts = 0;
+	p->cuts = 0;
+	p->ckts = 0;
 	//p->start_time todo
+
 
 	// tss field initilization
 	p->tss.pre_task_link = 0;
@@ -94,20 +145,26 @@ int copy_process(uint32_t ebx, uint32_t ecx, uint32_t edx, uint32_t edi, uint32_
 	p->tss.edi = edi;
 	p->tss.es = es & 0xFFFF;
 	p->tss.cs = cs & 0xFFFF;
+	p->tss.ss = ss & 0xFFFF;
 	p->tss.ds = ds & 0xFFFF;
 	p->tss.fs = fs & 0xFFFF;
 	p->tss.gs = 0;
 	p->tss.ldt = _LDT(nxt_task_index);
 	p->tss.debug_trap = 0;
-	p->tss.io_map_base = 104;
+	p->tss.io_map_base = 104;	// do not use io-bit map
 
 	// todo x87 save
 
-	// todo copy_mem(nxt_task_index, p);
+//	if(copy_mem(nxt_task_index, p))
+//	{
+//		tasks_ptr[nxt_task_index] = NULL;
+//		free_page((uint32_t)p);
+//		return -EAGAIN;
+//	}
 
 	// todo 把父进程打开的文件的打开计数增加 因为子进程继承了这些文件
 
-	// todo 设置pwd root 
+	// todo 设置pwd root
 
 	set_tss_desc(&gdt, FIRST_TSS_DESC_INDEX + nxt_task_index * 2, (uint32_t)(&p->tss), DPL_0);
 	set_ldt_desc(&gdt, FIRST_LDT_DESC_INDEX + nxt_task_index * 2, (uint32_t)(&p->ldt), DPL_0);

@@ -84,7 +84,7 @@ ret_type func_name(void) \
 { \
 	int __res; \
 	asm("int $0x80;":"=a"(__res):"a"(__NR_##func_name)); \
-	if(__res > 0) \
+	if(__res >= 0) \
 	{ \
 		return (ret_type)__res; \
 	} \
@@ -102,7 +102,7 @@ ret_type func_name(p1_type p1_name) \
 { \
 	int __res; \
 	asm("int $0x80;":"=a"(__res):"a"(__NR_##func_name), "b"((int)p1_name)); \
-	if(__res > 0) \
+	if(__res >= 0) \
 	{ \
 		return (ret_type)__res; \
 	} \
@@ -120,7 +120,7 @@ ret_type func_name(p1_type p1_name, p2_type p2_name) \
 { \
 	int __res; \
 	asm("int $0x80;":"=a"(__res):"a"(__NR_##func_name), "b"((int)p1_name), "c"((int)p2_name)); \
-	if(__res > 0) \
+	if(__res >= 0) \
 	{ \
 		return (ret_type)__res; \
 	} \
@@ -133,12 +133,12 @@ ret_type func_name(p1_type p1_name, p2_type p2_name) \
 
 
 // 用来定义3个参数的系统调用
-#define _syscall_2(ret_type, func_name, p1_type, p1_name, p2_type, p2_name, p3_type, p3_name) \
+#define _syscall_3(ret_type, func_name, p1_type, p1_name, p2_type, p2_name, p3_type, p3_name) \
 ret_type func_name(p1_type p1_name, p2_type p2_name, p3_type p3_name) \
 { \
 	int __res; \
 	asm("int $0x80;":"=a"(__res):"a"(__NR_##func_name), "b"((int)p1_name), "c"((int)p2_name), "d"((int)p3_name)); \
-	if(__res > 0) \
+	if(__res >= 0) \
 	{ \
 		return (ret_type)__res; \
 	} \

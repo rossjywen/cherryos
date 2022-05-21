@@ -20,6 +20,13 @@
 #define TASK_LOAD_TR(task_nr)	asm("ltr %%ax"::"a"(_TSS(task_nr)))
 #define TASK_LOAD_LDTR(task_nr)	asm("lldt %%ax"::"a"(_LDT(task_nr)))
 
+#define get_segment_limit(selector)	\
+({ \
+	uint32_t __res; \
+	asm("lsll %1, %0;":"=r"(__res):"r"(selector)); \
+	__res; \
+})
+
 
 #define switch_to(task_nr) \
 ({ \
@@ -119,15 +126,25 @@ enum task_state
 struct task_struct
 {
 	enum task_state state;
+	
 	int32_t exit_code;
+	int32_t start_time;
 
 	int32_t ts;			// time slice
 	int32_t priority;	// nice value, also distributed time slice in schedule()
 	
+	/* signal related */
 	int32_t signal;
 	struct sigaction sa[32];
 	int32_t blocked;
 	int32_t alarm;
+
+	/* a.out related */
+	//uint32_t start_code;			//代码段地址
+	//uint32_t end_code;			//代码长度 字节
+	//uint32_t end_data;			//代码长度+数据长度
+	//uint32_t brk;					//总长度
+	//uint32_t start_stack;			//堆栈段地址
 
 
 	/* pid related */
@@ -149,9 +166,20 @@ struct task_struct
 	int32_t session;	// session id
 	int32_t leader;		// whether is session leader
 
+	/* file system related */
+	//int32_t tty;						//进程使用tty的子设备号 -1表示没有使用
+	//uint16_t umask;						//文件创建属性屏蔽位
+	//struct m_inode * pwd;				//当前工作目录的i-node
+	//struct m_inode * root;				//根目录的i-node
+	//struct m_inode * executable;		//执行文件i-node
+	//uint32_t close_on_exec;				//执行时关闭文件句柄位图标志
+	//struct file * filp[NR_OPEN];		//使用的文件结构
+
 	/* statistics related */
 	uint32_t uts;		// user time slice
 	uint32_t kts;		// kernel time slice
+	uint32_t cuts;		// child user time slice
+	uint32_t ckts;		// child kernel time slice
 
 	/* x86 related */
 	struct seg_desc ldt[3];
@@ -172,6 +200,11 @@ struct task_struct * find_pid_task(int32_t pid);
 void switch_to_TASK0(void);
 void schedule(void);
 
+uint32_t get_segment_base(struct seg_desc *seg);
+void set_segment_base(struct seg_desc *seg, uint32_t new_base);
+void set_segment_limit(struct seg_desc *seg, uint32_t new_limit);
+
+void init_task1_paging(void);
 
 extern struct task_struct *tasks_ptr[NUMBER_OF_TASKS];
 extern union task_union task0;

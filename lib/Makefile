@@ -5,7 +5,8 @@ AS		= nasm
 ASFLAGS	= -g -f elf32 
 
 OBJS	= 	ctype.o \
-			string.o
+			string.o \
+			errno.o
 
 
 %.o : %.s

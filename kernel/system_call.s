@@ -95,11 +95,11 @@ timer_interrupt:
 	mov es, ax
 	mov ax, 0x17	; 确保fs指向用户代码的数据段
 	mov fs, ax
+	
+	mov al, 0x20	; note acknowledge must before call do_timer_interrupt
+	out 0x20, al	; because schedule() maybe transfer makes no chance to ackownledge
 
 	call  do_timer_interrupt
-	
-	mov al, 0x20
-	out 0x20, al
 
 	jmp ret_from_system_call
 
@@ -124,7 +124,7 @@ system_call:
 	mov bx, 0x17	; 确保fs指向用户代码的数据段
 	mov fs, bx
 
-	mov ebx, [system_call_table]	; 和gas不同 nasm的extern只能拿到内存地址 取出值才是指针
+	mov ebx, system_call_table
 	call [ebx + 4 * eax]			; eax是系统调用号 也就是system_call_table的数组下标
 	push eax						; 这是要和ret_from_system_call保持一致
 

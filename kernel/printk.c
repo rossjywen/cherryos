@@ -32,7 +32,7 @@ void panic(char *msg)
 {
 	printk("Kernel panic: %s\n", msg);
 
-
+	while(1) ;
 	//sys_sync();
 }
 

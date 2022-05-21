@@ -27,7 +27,8 @@ OBJS	= head.o \
 		  driver/keyboard.o \
 		  driver/tty_io.o \
 		  lib/ctype.o \
-		  lib/string.o
+		  lib/string.o \
+		  lib/errno.o
 
 KERNEL	= kernel_bin kernel_img bootsect_bin setup_bin
 
@@ -93,6 +94,7 @@ driver/tty_io.o : driver/tty_io.c
 
 lib/ctype.o : lib/ctype.c include/ctype.h
 lib/string.o : lib/string.c
+lib/errno.o : lib/errno.c
 	(cd lib; make)
 
 

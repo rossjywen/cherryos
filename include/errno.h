@@ -4,9 +4,9 @@
 
 #define EPERM		1
 #define EAGAIN		11
+#define ENOMEM		12	// out of memory
 #define EINVAL		22
 #define ENOSYS		38
-
 
 extern int errno;
 

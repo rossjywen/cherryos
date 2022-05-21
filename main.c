@@ -4,10 +4,13 @@
 #include <linux/head.h>
 #include <linux/kernel.h>
 #include <string.h>
+#include <errno.h>
 
+#define __LIBRARY__
+#include <unistd.h>
+static inline _syscall_0(int, fork)
 
-#define EXT_MEM_SIZE (*((uint16_t *)0x90002))
-
+#define EXT_MEM_K (*(unsigned short *)0x90002)
 
 void trap_init(void);
 void tty_init(void);
@@ -28,18 +31,18 @@ void assemble_label_show()
 int main()
 {
 	uint32_t buf_mem_end;
-	uint32_t main_mem_end = EXT_MEM_SIZE;
+	uint32_t main_mem_end;
 
+
+	main_mem_end = EXT_MEM_K;	// note: at this point the unit is KB
 
 	tty_init();
 	
 	trap_init();
 
-	assemble_label_show();
-
-	sched_init();
-	
 	system_call_init();
+
+	assemble_label_show();
 
 /*
 	memory layout : 0 -> 1MB -> buf_mem_end -> main_mem_end
@@ -48,21 +51,59 @@ int main()
 	1MB ~ buf_mem_end : reserved for buffer
 	buf_mem_end ~ main_mem_end : 
 */
-	if(main_mem_end < 12 * 1024 * 1024)		// 小于12MB就直接报错死机
+	if(main_mem_end < 12 * 1024)		// 小于12MB就直接报错死机
 	{
 		printk("memory size is too small\n");
 		while(1);
 	}
-	else 
+	else
 	{
 		if(main_mem_end >= 16 * 1024 * 1024)
-			main_mem_end = 16 * 1024 * 1024;
+			main_mem_end = 16 * 1024 * 1024;	// 这个时候单位就不是KB了而是B
 		buf_mem_end = 4 * 1024 * 1024;
+		printk("ext mem size : %#x\n", main_mem_end);
 	}
 	mem_init(buf_mem_end, main_mem_end);
+
+	sched_init();	// 进入task0之前最后开启定时器中断
 
 	switch_to_TASK0();
 }
 
+void TASK_0(void)
+{
+	uint32_t i = 0;
+	uint32_t j = 0;
 
+	if(fork() == 0)		// 子进程
+	{
+		while(1)
+		{
+			j++;
+			if(j == 5000000)
+			{
+				printk("in task1\n");
+				/*
+				 * 下面这个操作会触发page fault
+				 * 经过debug 发现是因为 通过fork()创建的任务的task_union是通过get_free_page()分配的
+				 * 而从main()上面的代码可知 是从buf_mem_end开始分配
+				 * 而在任务中读取这个current就会触发段级保护
+				 * */
+				//printk("current->ts %d\n", current->ts);
+				j = 0;
+			}
+		}
+	}
+
+	while(1)
+	{
+		i++;
+		if(i == 10000000)
+		{
+			printk("in task0\n");
+			printk("current->ts %d\n", current->ts);
+			i = 0;
+		}
+	}
+}
 

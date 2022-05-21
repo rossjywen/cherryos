@@ -11,23 +11,63 @@ int32_t volatile jiffies = 0;
 struct task_struct *current = NULL;
 
 
-void test_task0(void);
+void TASK_0(void);
 uint8_t task0_user_stack[PAGE_SIZE];
 union task_union task0 = { 	// todo other fields initilization
 	.task = 
 	{ 
 		.state = TASK_RUNNING,
+		.exit_code = 0,
 
-		.ts = 0,
+		.ts = 10,
+		.priority = 10,
 
+		/* signal related */
 		.signal = 0,
 		.sa = {{},},
 		.blocked = 0,
 		.alarm = 0,
 
-		.priority = 5,
+		/* a.out related */
+		//.start_code = ,
+		//.end_code = ,
+		//.end_data = ,
+		//.brk = ,
+		//.start_stack = ,
+
+		/* pid related */
+		.pid = 0,
+		.father = -1,
+		.pgrp = 0,
+
+		/* uid related */
+		.uid = 0,
+		.euid = 0,
+		.suid = 0,
+
+		/* gid related */
+		.gid = 0,
+		.egid = 0,
+		.sgid = 0,
+
+		/* session related */
+		.session = 0,
+		.leader = 0,
+
+		/* file system related */
+		//.tty = ,
+		//.umask = ,
+		//.pwd = ,
+		//.root = ,
+		//.executable = ,
+		//.close_on_exec = ,
+		//filp = ,
+
+		/* statistics related */
 		.uts = 0,
 		.kts = 0,
+		.cuts = 0,
+		.ckts = 0,
 
 		.ldt = 
 		{ 
@@ -55,7 +95,7 @@ union task_union task0 = { 	// todo other fields initilization
 
 			.cr3 =  (uint32_t)(&page_dir),		// 所有的任务都和kernel一样 用page_dir作为cr3的值
 			
-			.eip =  (uint32_t)test_task0,		// 我打算给指向一个函数
+			.eip =  (uint32_t)TASK_0,		// 我打算给指向一个函数
 
 			.eflags = 0x00003202,	// 这是根据手册中eflag的初值设定的
 
@@ -409,20 +449,53 @@ void do_timer_interrupt(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx, 
 
 
 
-void test_task0(void)
-{
-	uint32_t i = 0;
 
-	while(1)
-	{
-		i++;
-		if(i == 10000000)
-		{
-			printk("in test_task0\n");
-			printk("current->ts %d\n", current->ts);
-			i = 0;
-		}
-	}
+
+
+uint32_t get_segment_base(struct seg_desc *seg)
+{
+	uint32_t base = 0;
+	uint32_t base_15_0 = 0, base_23_16 = 0, base_31_24 = 0;
+
+	base_15_0 = (seg->low_32 >> 16) & 0xFFFF;
+	base_23_16 = seg->high_32 & 0xFF;
+	base_31_24 = (seg->high_32 >> 24) & 0xFF;
+
+	base = (base_31_24 << 24) | (base_23_16 << 16) | base_15_0;
+
+	return base;
+}
+
+
+void set_segment_base(struct seg_desc *seg, uint32_t new_base)
+{
+	uint32_t base_15_0, base_23_16, base_31_24;
+
+	base_15_0 = new_base & 0xFFFF;
+	base_23_16 = (new_base >> 16) & 0xFF;
+	base_31_24 = (new_base >> 24) & 0xFF;
+
+	seg->low_32 &= 0x0000FFFF;	// 把base与成0
+	seg->high_32 &= 0x00FFFF00;
+
+	seg->low_32 |= base_15_0 << 8;
+	seg->high_32 |= base_23_16;
+	seg->high_32 |= base_31_24 << 24;
+}
+
+
+void set_segment_limit(struct seg_desc *seg, uint32_t new_limit)
+{
+	uint32_t limit_19_16, limit_15_0;
+
+	limit_19_16 = (new_limit >> 16) & 0xF;
+	limit_15_0 = new_limit & 0xFFFF;
+
+	seg->low_32 &= 0xFFFF0000;	// 把limit与成0
+	seg->high_32 &= 0xFFF0FFFF;
+
+	seg->low_32 |= limit_15_0;
+	seg->high_32 |= limit_19_16 << 16;
 }
 
 
