@@ -258,7 +258,6 @@ void trap_init(void)
 	set_gate(&idt, 11, TRAP_GATE, KERNEL_CS, &segment_not_present_11, DPL_0);
 	set_gate(&idt, 12, TRAP_GATE, KERNEL_CS, &stack_segment_error_12, DPL_0);
 	set_gate(&idt, 13, TRAP_GATE, KERNEL_CS, &general_protection_13, DPL_0);
-	set_gate(&idt, 14, TRAP_GATE, KERNEL_CS, &page_fault_14, DPL_0);
 	// 15 is reserved by Intel
 	set_gate(&idt, 16, TRAP_GATE, KERNEL_CS, &coprocessor_error_16, DPL_0);
 

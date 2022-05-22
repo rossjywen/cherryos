@@ -6,14 +6,14 @@
 
 
 
-// 释放fork这个任务的时候分配task_struct的一个4K页
+// release the task_union(task_struct) allocated in fork()
 void release(struct task_struct *p)
 {
 	uint32_t i;
 	
 
-	// 找到tasks_ptr中的项 然后置为null
-	// 之后调用free_page() todo
+	// set corresponding entry in tasks_ptr to null
+	// then invoke free_page()
 	
 	if(p == NULL)
 		return;
@@ -24,11 +24,11 @@ void release(struct task_struct *p)
 		{
 			tasks_ptr[i] = NULL;
 
-			//free_page(p); todo
+			free_page((uint32_t)p);
 
 			schedule();
 
-			return;		// 这条代码应该是防止编译器报错的 不会执行到这里
+			return;		// suppress warning from compiler
 		}
 	}
 
@@ -36,7 +36,7 @@ void release(struct task_struct *p)
 }
 
 
-// 向某个task_struct发送某个信号
+// send a signal to the certain task_struct
 static int32_t send_sig(int32_t sig, struct task_struct *p, int32_t priv)
 {
 	if((p == NULL) || (sig < 1) || (sig > 32))
@@ -98,7 +98,7 @@ int32_t sys_kill(int32_t pid, int32_t sig)
 }
 
 
-// 把当前正在执行的进程的会话关闭
+// send SIGHUP to tasks in the session
 static void kill_session(void)
 {
 	int32_t i;
@@ -110,7 +110,7 @@ static void kill_session(void)
 	}
 }
 
-// 给father_pid发送SIGCHLD信号 通知父进程子进程的结束
+// send SIGCHLD to father_pid to inform the exist of its child
 static void tell_father(uint32_t father_pid)
 {
 	struct task_struct *p;
@@ -145,22 +145,21 @@ int32_t do_exit(int32_t code)
 	// todo do_exit
 
 	// 1.把代码段和数据段分配的页表项free掉
-	// free_page_tables 代码段
-	// free_page_tables 数据段
+	free_page_tables(get_segment_base(&(current->ldt[1])), get_segment_limit(0x000F));
+	free_page_tables(get_segment_base(&(current->ldt[2])), get_segment_limit(0x0017));
 
 	// 2.处理自己的子进程
 	for(i = 1; i < NUMBER_OF_TASKS; i++)
 	{
 		if((tasks_ptr[i] != NULL) && (tasks_ptr[i]->father == current->pid))
 		{
-			tasks_ptr[i]->father = 1;	// 由task1收养
-
+			tasks_ptr[i]->father = 1;	// adopted by TASK1
 			if(tasks_ptr[i]->state == TASK_ZOMBIE)
 				send_sig(SIGCHLD, tasks_ptr[1], 1);
 		}
 	}
 
-	// 3.关闭打开的文件
+	// 3.close the opened files
 	//for (i=0 ; i<NR_OPEN ; i++)
 	//{
 	//	if (current->filp[i])
@@ -175,13 +174,13 @@ int32_t do_exit(int32_t code)
 	//iput(current->executable);
 	//current->executable=NULL;
 
-	// 5.其他
+	// 5.others
 	//if (current->leader && current->tty >= 0)
 	//	tty_table[current->tty].pgrp = 0;
 	//if (last_task_used_math == current)
 	//	last_task_used_math = NULL;
 	
-	if (current->leader)	// 如果exit的是leader 就把会话关闭
+	if (current->leader)	// if is leader then send SIGHUP to all tasks in session
 		kill_session();
 
 	current->state = TASK_ZOMBIE;
@@ -192,7 +191,7 @@ int32_t do_exit(int32_t code)
 
 	schedule();
 
-	return 0;	// supress warning from compiler
+	return 0;	// suppress warning from compiler
 }
 
 

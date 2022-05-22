@@ -3,6 +3,7 @@
 #include <linux/kernel.h>
 #include <linux/head.h>
 #include <asm/system.h>
+#include <errno.h>
 
 #define LOW_MEM	0x100000
 
@@ -13,6 +14,7 @@
 #define NOT_EXIST	100
 
 #define flush_TLB() asm("movl %%eax,%%cr3"::"a" (0))
+#define copy_page(from,to) asm("cld ; rep ; movsl"::"S" (from),"D" (to),"c" (1024))
 
 static uint8_t mem_map[PAGING_PAGES];	// 假设有16MB内存 (低端1MB + 高端15MB) todo 16MB
 static uint32_t mem_end_addr;
@@ -80,7 +82,7 @@ void init_task1_paging(void)
 {
 	int32_t i;
 	uint32_t page;
-	uint32_t *p = (uint32_t *)(16 * 4);
+	uint32_t *dir_ent = (uint32_t *)(16 * 4);
 
 	page = get_free_page();
 	if(page == 0)
@@ -90,7 +92,7 @@ void init_task1_paging(void)
 	{
 		*((uint32_t *)page + i) = (i * 0x1000) | 7;
 	}
-	*p = page | 7;	// 页目录
+	*dir_ent = page | 7;	// 页目录
 
 	return;
 }
@@ -141,7 +143,7 @@ int32_t copy_page_tables(uint32_t from, uint32_t to, uint32_t size)
 	uint32_t *from_page_dir_addr, *to_page_dir_addr;
 	uint32_t nr_of_dir_ent;
 	uint32_t *from_page_tab_addr, *to_page_tab_addr;
-	uint32_t curr_page;
+	uint32_t from_page_addr, to_page_addr;
 	int32_t i, j;
 
 	if((from & 0x3FFFFF) || (to & 0x3FFFFF))
@@ -158,24 +160,40 @@ int32_t copy_page_tables(uint32_t from, uint32_t to, uint32_t size)
 		if((from_page_dir_addr[i] & 1) == 0)
 			panic("source page dir is not present");
 
-		from_page_tab_addr = (uint32_t *)((uint32_t)(from_page_dir_addr[i]) & 0xFFFFF000);
+		from_page_tab_addr = (uint32_t *)(from_page_dir_addr[i] & 0xFFFFF000);
+
 		to_page_tab_addr = (uint32_t *)get_free_page();
 		if(to_page_tab_addr == 0)
-			return -1;
+			return -ENOMEM;
+
 		to_page_dir_addr[i] = (uint32_t)to_page_tab_addr | 7;
 
 		for(j = 0; j < 1024; j++)
 		{
-			curr_page = from_page_tab_addr[j];
-			if((curr_page & 1) == 0)
-				continue;
-			curr_page &= ~2;	// R/W位置0
-			to_page_tab_addr[j] = curr_page;
-
-			if(curr_page > LOW_MEM)	// 说明是1MB以上的
+			from_page_addr = from_page_tab_addr[j];
+			if((from_page_addr & 1) == 1)	// this page is present then copy it
 			{
-				from_page_tab_addr[j] = curr_page;	// 把父进程的页表R/W位也置0
-				mem_map[MAP_INDEX(curr_page)] += 1;	// 先写的会触发exception
+				from_page_addr &= 0xFFFFF000;	// get address
+
+				// todo share char graphic memory for task which number is above 1
+//				if((from_page_addr >= 0xA000) && (from_page_addr < 0xC000))	// char graphic memory region
+//				{
+//					to_page_tab_addr[j] = from_page_addr | 7;	// share it
+//				}
+//				else
+//				{
+					to_page_addr = get_free_page();
+					if(to_page_addr == 0)
+						return -ENOMEM;
+
+					copy_page(from_page_addr, to_page_addr);	// copy page
+
+					to_page_tab_addr[j] = to_page_addr | 7;	// set pagging entry
+//				}
+			}
+			else
+			{
+				continue;	// this page is not present then ignore it
 			}
 		}
 	}

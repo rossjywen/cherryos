@@ -78,6 +78,7 @@ int32_t sys_sigaction(uint32_t signum, struct sigaction * action, struct sigacti
 	return 0;
 }
 
+int32_t do_exit(int32_t exit_code);
 
 void do_signal(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx, \
 			uint32_t edi, uint32_t esi, uint32_t ebp, uint32_t ds, uint32_t es, uint32_t fs, \
@@ -128,11 +129,10 @@ void do_signal(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx, \
 		if(sig_number == SIGCHLD)	// todo 确认子进程退出状态 改变TASK_ZOMBIE态
 			return; // todo 应该调用wait() 但是linux-0.11直接return
 		else
-			return;	//do_exit(); // todo do_exit
+			do_exit(1 << sig_number);
 	}
 
 	// 如果走到了这里就说明需要直接用户设置的handler了
-
 
 	*(&eip) = (uint32_t)(sig_act->sa_handler);	// ret_from_syscall中执行iret的地址被修改为用户设置的handler地址
 

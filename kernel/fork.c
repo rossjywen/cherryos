@@ -33,10 +33,11 @@ int32_t copy_mem(int32_t task_nr, struct task_struct *p)
 	printk("code hi32 %#x\n", p->ldt[1].high_32);
 	printk("code low32 %#x\n", p->ldt[1].low_32);
 	printk("old code limit %#x\n", old_code_limit);
-	//while(1);
 
 	if(task_nr == 1)	// because my kernel uses 4MB pages so at this point I have to
 	{					// do some perticular stuff on task1(init task)
+		set_segment_limit(&(p->ldt[1]), 0xFF);	// set code segment limit to 1MB
+		set_segment_limit(&(p->ldt[2]), 0xFF);	// set data segment limit to 1MB
 		init_task1_paging();
 	}
 	else
@@ -94,7 +95,7 @@ int copy_process(uint32_t unused, uint32_t ebx, uint32_t ecx, uint32_t edx, uint
 
 	nxt_task_index = find_empty_process();
 
-	if(nxt_task_index == 0)		// 说明tasks_ptr[]数组中没有null的entry了
+	if(nxt_task_index == 0)		// no valid entry in tasks_ptr[]
 		return -EAGAIN;
 
 	printk("--- in fork() ---\n");
@@ -104,23 +105,24 @@ int copy_process(uint32_t unused, uint32_t ebx, uint32_t ecx, uint32_t edx, uint
 	printk("cs 0x%lx\n", cs);
 	printk("eip 0x%lx\n", eip);
 	printk("eflags 0x%lx\n", eflags);
-	//printk("0x%lx\n", );
+	printk("ldtr 0x%lx\n", _LDT(nxt_task_index));
+	printk("tr 0x%lx\n", _TSS(nxt_task_index));
 	printk("-----------------\n");
 
-	// 到这里说明找到了null的entry
+	// if code get here means valid entry was found
 
-	// 分配1个4k页空间存放task_union
+	// allocate one 4k-page for task_union
 	p = (struct task_struct*)get_free_page();
 	tasks_ptr[nxt_task_index] = p;
 
-	*p = *current; 			// 先把父进程的信息copy过来 然后再把不一样的修改了
+	*p = *current; 			// copy all info then modify
 
 	p->state = TASK_UNINTERRUPTIBLE;	// 在状态设置好之前 千万不能被中断程序调度
 	p->pid = last_pid;
 	p->father = current->pid;
-	p->ts = current->priority;	// 时间片和优先级继承了父进程
-	p->signal = 0;			// pending的信号清零
-	p->alarm = 0;			// alarm清零
+	p->ts = current->priority;	// priority is inherited
+	p->signal = 0;			// reset pending signal
+	p->alarm = 0;			// reset alarm
 	p->leader = 0;
 	p->uts = 0;
 	p->kts = 0;
@@ -133,9 +135,9 @@ int copy_process(uint32_t unused, uint32_t ebx, uint32_t ecx, uint32_t edx, uint
 	p->tss.pre_task_link = 0;
 	p->tss.esp0 = (uint32_t)p + PAGE_SIZE;
 	p->tss.ss0 = KERNEL_SS;
-	p->tss.eip = eip;		// switch_to()的时候 回到调用fork()的地方 也就是int 0x80的下一条
+	p->tss.eip = eip;		// back to next instruction of int 0x80
 	p->tss.eflags = eflags;
-	p->tss.eax = 0;			// 这个eax就是fork()子进程返回0的原因
+	p->tss.eax = 0;			// this is why child process returns 0 on fork()
 	p->tss.ecx = ecx;
 	p->tss.edx = edx;
 	p->tss.ebx = ebx;
@@ -151,16 +153,16 @@ int copy_process(uint32_t unused, uint32_t ebx, uint32_t ecx, uint32_t edx, uint
 	p->tss.gs = 0;
 	p->tss.ldt = _LDT(nxt_task_index);
 	p->tss.debug_trap = 0;
-	p->tss.io_map_base = 104;	// do not use io-bit map
+	p->tss.io_map_base = 104;	// I do not use io-bit map
 
 	// todo x87 save
 
-//	if(copy_mem(nxt_task_index, p))
-//	{
-//		tasks_ptr[nxt_task_index] = NULL;
-//		free_page((uint32_t)p);
-//		return -EAGAIN;
-//	}
+	if(copy_mem(nxt_task_index, p))
+	{
+		tasks_ptr[nxt_task_index] = NULL;
+		free_page((uint32_t)p);
+		return -EAGAIN;
+	}
 
 	// todo 把父进程打开的文件的打开计数增加 因为子进程继承了这些文件
 
@@ -171,6 +173,6 @@ int copy_process(uint32_t unused, uint32_t ebx, uint32_t ecx, uint32_t edx, uint
 
 	p->state = TASK_RUNNING;
 
-	return last_pid;	// 这就是父进程调用fork()返回子进程id的原因
+	return last_pid;	// this is why father process returns pid of child process on fork()
 }
 

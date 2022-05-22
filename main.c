@@ -74,13 +74,27 @@ void TASK_0(void)
 {
 	uint32_t i = 0;
 	uint32_t j = 0;
+	uint32_t k = 0;
 
-	if(fork() == 0)		// 子进程
+	if(fork() == 0)		// child
 	{
+		if(fork() == 0)
+		{
+			while(1)
+			{
+				k += 10;
+				if(k >= 0x7A0000) // use vb to debug
+				{
+					//printk("in task2\n");	still does not work even I shared pagging in char graphic mem
+					k = 0;
+				}
+			}
+		}
+
 		while(1)
 		{
 			j++;
-			if(j == 5000000)
+			if(j == 0x4C0000)	// 5000000
 			{
 				printk("in task1\n");
 				/*
@@ -98,10 +112,10 @@ void TASK_0(void)
 	while(1)
 	{
 		i++;
-		if(i == 10000000)
+		if(i == 0x980000)	// 10000000
 		{
 			printk("in task0\n");
-			printk("current->ts %d\n", current->ts);
+			//printk("current->ts%d\n", current->ts); 如果打开这条语句 printk就会出bug
 			i = 0;
 		}
 	}
