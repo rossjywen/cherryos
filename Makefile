@@ -26,6 +26,8 @@ OBJS	= head.o \
 		  driver/console.o \
 		  driver/keyboard.o \
 		  driver/tty_io.o \
+		  driver/ll_rw_blk.o \
+		  fs/buffer.o \
 		  lib/ctype.o \
 		  lib/string.o \
 		  lib/errno.o
@@ -68,6 +70,7 @@ clean :
 	(cd kernel; make clean)
 	(cd mm; make clean)
 	(cd driver; make clean)
+	(cd fs; make clean)
 	(cd lib; make clean)
 
 
@@ -91,6 +94,9 @@ driver/console.o : driver/console.c
 driver/keyboard.o : driver/keyboard.s
 driver/tty_io.o : driver/tty_io.c
 	(cd driver; make)
+
+fs/buffer.o : fs/buffer.c
+	(cd fs; make)
 
 lib/ctype.o : lib/ctype.c include/ctype.h
 lib/string.o : lib/string.c

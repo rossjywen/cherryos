@@ -3,6 +3,7 @@
 #include <linux/sched.h>
 #include <linux/head.h>
 #include <linux/kernel.h>
+#include <linux/fs.h>
 #include <string.h>
 #include <errno.h>
 
@@ -17,6 +18,7 @@ void tty_init(void);
 void sched_init(void);
 void system_call_init(void);
 void mem_init(uint32_t start_mem_addr, uint32_t end_mem_addrd);
+void blk_req_init(void);
 
 
 void assemble_label_show()
@@ -64,6 +66,10 @@ int main()
 		printk("ext mem size : %#x\n", main_mem_end);
 	}
 	mem_init(buf_mem_end, main_mem_end);
+
+	buffer_init(buf_mem_end);
+
+	blk_req_init();
 
 	sched_init();	// 进入task0之前最后开启定时器中断
 
