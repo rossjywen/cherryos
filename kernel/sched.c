@@ -196,7 +196,6 @@ void set_tss_desc(struct seg_desc *gdt_table, uint32_t index, uint32_t tss_data_
 }
 
 
-
 void set_ldt_desc(struct seg_desc *gdt_table, uint32_t index, uint32_t ldt_data_addr, uint8_t dpl)
 {
 	uint32_t low = 0;
@@ -238,17 +237,14 @@ void sched_init(void)
 
 	set_tss_desc(&gdt, FIRST_TSS_DESC_INDEX, (uint32_t)(&task0.task.tss), DPL_0);
 	set_ldt_desc(&gdt, FIRST_LDT_DESC_INDEX, (uint32_t)(task0.task.ldt), DPL_0);
+	TASK_LOAD_TR(0);	// timer handler will do 'mov fs, 0x17'
+	TASK_LOAD_LDTR(0);	// so LDTR must be initilized before timer interrupt
 
 	for(i = 1; i < NUMBER_OF_TASKS; i++)
 		tasks_ptr[i] = NULL;
 
-
 	for(i = FIRST_TSS_DESC_INDEX + 2; i < (NUMBER_OF_TASKS - 1) * 2; i++)
-	{
 		*((uint64_t*)(&gdt) + i) = 0;	// 其实已经在head.s中做过了 这里为了可读性再做一次
-										// 如果打开task1 就需要把这段注释掉
-	}
-
 
 	// 开始对8254进行编程
 	// 使用工作方式3 方波发生器 1秒产生100次中断
@@ -260,10 +256,6 @@ void sched_init(void)
 	set_gate(&idt, 0x20, INTERRUPT_GATE, KERNEL_CS, &timer_interrupt, DPL_0);
 	out_b(in_b(MASTER_8259_OPERATE_OCW1) & ~0x01, MASTER_8259_OPERATE_OCW1);
 }
-
-
-
-
 
 
 void switch_to_TASK0()
@@ -299,9 +291,6 @@ void switch_to_TASK0()
 
 	current = tasks_ptr[0];
 	
-	TASK_LOAD_TR(0);
-	TASK_LOAD_LDTR(0);
-
 /*
 	%0	eax
 	%1	ebx
@@ -425,6 +414,8 @@ void do_timer_interrupt(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx, 
 	// 2.ts自减
 	current->ts -= 1;
 
+	// todo timer
+
 	// 3.检查到底是用户态还是内核态被中断的
 	//   如果内核态被中断则不能调度
 	//   如果用户态被中断则保存现场 然后选另外一个进程执行
@@ -447,9 +438,54 @@ void do_timer_interrupt(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx, 
 }
 
 
+void sleep_on(struct task_struct **p)
+{
+	struct task_struct *tmp;
+
+	if (!p)
+		return;
+	if (current == &(task0.task))
+		panic("task[0] trying to sleep");
+	tmp = *p;
+	*p = current;
+	current->state = TASK_UNINTERRUPTIBLE;
+	schedule();
+	if (tmp)
+		tmp->state = TASK_RUNNING;
+}
 
 
+void interruptible_sleep_on(struct task_struct **p)
+{
+	struct task_struct *tmp;
 
+	if (!p)
+		return;
+	if (current == &(task0.task))
+		panic("task[0] trying to sleep");
+	tmp = *p;
+	*p = current;
+
+repeat:
+	current->state = TASK_INTERRUPTIBLE;
+	schedule();
+	if (*p && *p != current) {
+		(**p).state = TASK_RUNNING;
+		goto repeat;
+	}
+	*p=NULL;
+	if (tmp)
+		tmp->state = TASK_RUNNING;
+}
+
+
+void wake_up(struct task_struct **p)
+{
+	if (p && *p) {
+		(**p).state = TASK_RUNNING;
+		*p = NULL;
+	}
+}
 
 
 uint32_t get_segment_base(struct seg_desc *seg)

@@ -200,6 +200,10 @@ struct task_struct * find_pid_task(int32_t pid);
 void switch_to_TASK0(void);
 void schedule(void);
 
+void sleep_on(struct task_struct **p);
+void interruptible_sleep_on(struct task_struct **p);
+void wake_up(struct task_struct **p);
+
 uint32_t get_segment_base(struct seg_desc *seg);
 void set_segment_base(struct seg_desc *seg, uint32_t new_base);
 void set_segment_limit(struct seg_desc *seg, uint32_t new_limit);
