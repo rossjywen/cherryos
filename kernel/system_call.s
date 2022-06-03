@@ -4,10 +4,10 @@
 ; 和kernel/asm.s不同的地方还包括这里处理完中断之后还需要检查信号量
 ; 我不打算像linux-0.11那样在汇编层面实现很多功能 而是更多的放在C层面实现
 
-extern do_timer_interrupt, do_signal, copy_process
-extern system_call_table
+extern do_timer_interrupt, do_signal, copy_process, unexpected_hd_interrupt
+extern system_call_table, do_hd
 
-global  timer_interrupt, system_call, sys_fork
+global  timer_interrupt, system_call, sys_fork, hd_interrupt
 
 
 NUMBER_OF_SYSCALLS equ 72
@@ -137,5 +137,36 @@ sys_fork:
 	ret
 
 
+hd_interrupt:
+	push eax
+	push ecx
+	push edx
+	push ds
+	push es
+	push fs
+	mov eax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov eax, 0x17
+	mov fs, ax
 
+	mov edx, 0
+	xchg [do_hd], edx
+	test edx, edx
+	jnz .no_error
+	mov edx, unexpected_hd_interrupt
+.no_error:
+	call edx
+
+	mov al, 0x20	; different with 0.11 todo verify
+	out 0xA0, al	; acknowledge second 8259
+	out 0x20, al	; acknowledge first 8259
+
+	pop fs
+	pop es
+	pop ds
+	pop edx
+	pop ecx
+	pop eax
+	iret
 

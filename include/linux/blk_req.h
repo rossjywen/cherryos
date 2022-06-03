@@ -9,6 +9,11 @@
 
 #define NUMBER_OF_REQUESTS	32
 
+#define BLK_DEV_NUM_HD	3
+
+#define BLK_READ 0
+#define BLK_WRITE 1
+
 
 struct blk_request
 {
@@ -16,7 +21,7 @@ struct blk_request
 	int32_t cmd;	// BLK_READ or BLK_WRITE
 	int32_t errors;
 
-	uint32_t sector;	// starting sector number
+	uint32_t sector;	// starting sector number (relative)
 	uint32_t nr_sector;	// number of sector to read or write
 	int8_t *buffer;	// usually points to buffer_head->b_data
 
@@ -33,8 +38,8 @@ struct blk_request_dev
 };
 
 
-struct blk_request_dev blk_dev[BLK_DEV_KINDS];
-struct blk_request request[NUMBER_OF_REQUESTS];
-struct task_struct * wait_for_request;
+extern struct blk_request_dev blk_dev[BLK_DEV_KINDS];
+extern struct blk_request request[NUMBER_OF_REQUESTS];
+extern struct task_struct * wait_for_request;
 
 #endif //BLK_REQ_H

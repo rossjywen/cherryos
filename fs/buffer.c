@@ -2,6 +2,7 @@
 #include <linux/fs.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
+#include <linux/blk_req.h>
 #include <asm/system.h>
 
 
@@ -16,6 +17,27 @@ struct buffer_head * free_list;	// buffer free-list
 struct buffer_head * hash_table[NR_HASH];	// 307 entries
 
 static struct task_struct * buffer_wait = NULL;	// wait queue
+
+
+void lock_buffer(struct buffer_head * bh)
+{
+	disable_interrupt();
+
+	while (bh->b_lock)
+		sleep_on(&bh->b_wait);
+	bh->b_lock=1;
+
+	enable_interrupt();
+}
+
+
+void unlock_buffer(struct buffer_head * bh)
+{
+	if (!bh->b_lock)
+		printk("try to unlock a unlocked buffer\n");
+	bh->b_lock = 0;
+	wake_up(&bh->b_wait);
+}
 
 
 // wait b_lock to become 0
@@ -115,11 +137,12 @@ struct buffer_head * get_hash_table(int32_t dev, int32_t block)
 }
 
 
-/* 这个宏用来计算当找不到“完美”的块的时候 哪个块更合适一些
+/*
+ * 这个宏用来计算当找不到“完美”的块的时候 哪个块更合适一些
  * 其中b_dirt的影响更大 所以左移1位
  * b_dirt影响大是因为如果等待的是dirty的 需要调用sync_dev() 成本很高
  * 这个宏计算出来的结果越大说明“越差” 所以尽量找到更小返回值的块
- * */
+ */
 #define BADNESS(bh) (((bh)->b_dirt<<1)+(bh)->b_lock)
 struct buffer_head * getblk(int32_t dev, int32_t block)
 {

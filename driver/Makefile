@@ -7,7 +7,8 @@ ASFLAGS	= -g -f elf32
 OBJS	= 	console.o \
 			keyboard.o \
 			tty_io.o \
-			ll_rw_blk.o
+			ll_rw_blk.o \
+			hd.o
 
 
 %.o : %.s

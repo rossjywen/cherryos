@@ -27,6 +27,7 @@ OBJS	= head.o \
 		  driver/keyboard.o \
 		  driver/tty_io.o \
 		  driver/ll_rw_blk.o \
+		  driver/hd.o \
 		  fs/buffer.o \
 		  lib/ctype.o \
 		  lib/string.o \

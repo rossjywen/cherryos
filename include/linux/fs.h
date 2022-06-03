@@ -4,8 +4,6 @@
 #include <sys/types.h>
 #include <linux/sched.h>
 
-#define BLK_READ 0
-#define BLK_WRITE 1
 
 #define BLOCK_SIZE 1024
 #define NR_HASH 307		// number of hash-table entries
@@ -34,6 +32,8 @@ struct buffer_head
 };
 
 /* buffer related */
+void lock_buffer(struct buffer_head * bh);
+void unlock_buffer(struct buffer_head * bh);
 void buffer_init(uint32_t buffer_end);
 struct buffer_head * bread(int32_t dev,int32_t block);
 void brelse(struct buffer_head * buf);

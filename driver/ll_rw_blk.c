@@ -22,27 +22,6 @@ struct blk_request_dev blk_dev[BLK_DEV_KINDS] =	// index is dev MAJOR number
 };
 
 
-static inline void lock_buffer(struct buffer_head * bh)
-{
-	disable_interrupt();
-
-	while (bh->b_lock)
-		sleep_on(&bh->b_wait);
-	bh->b_lock=1;
-
-	enable_interrupt();
-}
-
-
-static inline void unlock_buffer(struct buffer_head * bh)
-{
-	if (!bh->b_lock)
-		printk("ll_rw_block.c: buffer not locked\n");
-	bh->b_lock = 0;
-	wake_up(&bh->b_wait);
-}
-
-
 static void add_request(struct blk_request_dev * dev, struct blk_request * req)
 {
 	struct blk_request *tmp;
