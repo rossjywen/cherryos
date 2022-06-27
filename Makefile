@@ -1,5 +1,5 @@
 CC		= x86_64-elf-gcc
-CFLAGS	= -g -c -nostdinc -Iinclude -Wall -m32 -O0
+CFLAGS	= -g -c -nostdinc -Iinclude -Wall -m32 -O0 -fno-pie -fno-stack-protector
 
 
 AS		= nasm
